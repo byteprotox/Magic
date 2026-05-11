@@ -61,7 +61,7 @@ export default function AdminLogin() {
           </button>
         </form>
         <p className="text-center mt-6 text-xs text-zinc-600 font-en">
-          Smart Pen Knife Admin
+          ম্যাজিক টিস্যু Admin
         </p>
       </div>
     </div>

@@ -112,7 +112,7 @@ export default function AdminDashboard() {
         {/* Sidebar */}
         <aside className="hidden md:flex flex-col w-64 min-h-screen border-r border-zinc-900 bg-[#080808] p-4 sticky top-0">
           <div className="px-2 pb-6">
-            <div className="font-en font-black text-lg">PEN KNIFE</div>
+            <div className="font-en font-black text-lg">MAGIC TISSUE</div>
             <div className="text-xs text-zinc-500 font-en uppercase tracking-wider">Admin</div>
           </div>
           <nav className="space-y-1 flex-1">
@@ -127,7 +127,7 @@ export default function AdminDashboard() {
 
         {/* Mobile top bar */}
         <div className="md:hidden fixed top-0 left-0 right-0 z-30 bg-[#080808] border-b border-zinc-900 p-3 flex items-center justify-between">
-          <div className="font-en font-black">PEN KNIFE Admin</div>
+          <div className="font-en font-black">MAGIC TISSUE Admin</div>
           <button onClick={logout} className="text-zinc-400">
             <LogOut size={18} />
           </button>
