@@ -36,6 +36,16 @@ const ICON_OPTIONS = [
 
 const COLOR_OPTIONS = ["blue", "green", "purple", "orange", "red", "yellow"];
 
+// Static class map so Tailwind JIT keeps these in production
+const COLOR_PREVIEW = {
+  blue: "bg-blue-500/20 text-blue-400 border-blue-500/40",
+  green: "bg-green-500/20 text-green-400 border-green-500/40",
+  purple: "bg-purple-500/20 text-purple-400 border-purple-500/40",
+  orange: "bg-orange-500/20 text-orange-400 border-orange-500/40",
+  red: "bg-red-500/20 text-red-400 border-red-500/40",
+  yellow: "bg-yellow-500/20 text-yellow-400 border-yellow-500/40",
+};
+
 function Section({ icon: Icon, title, subtitle, children, defaultOpen = false }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
@@ -381,8 +391,8 @@ export default function ProductEditor({ product, onChange }) {
                         type="button"
                         onClick={() => setTrustBadges(trustBadges.map((x, idx) => (idx === i ? { ...x, color: c } : x)))}
                         className={`px-3 py-1.5 rounded-md border-2 text-xs font-en capitalize ${
-                          b.color === c ? "border-white" : "border-zinc-700"
-                        } bg-${c}-500/20 text-${c}-400`}
+                          b.color === c ? "ring-2 ring-white/60" : ""
+                        } ${COLOR_PREVIEW[c]}`}
                       >
                         {c}
                       </button>
