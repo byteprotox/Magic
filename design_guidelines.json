@@ -1,0 +1,203 @@
+{
+  "theme": "DARK",
+  "archetype": "Archetype 2: Performance Pro",
+  "domain": "Tactical Gadgets / Everyday Carry (EDC)",
+  "emotional_tone": "Premium, Sharp, Reliable, Masculine, Tactical",
+  "typography": {
+    "fonts": {
+      "headings": {
+        "family": "Chivo",
+        "weights": ["700", "900"],
+        "usage": "Used for English text, numbers (like prices and countdown timer), and bold primary CTAs."
+      },
+      "body": {
+        "family": "Hind Siliguri",
+        "weights": ["400", "500", "600", "700"],
+        "usage": "Primary font for all Bengali text, descriptions, and UI elements to ensure clean readability."
+      }
+    },
+    "hierarchy_rules": {
+      "h1": "text-4xl sm:text-5xl lg:text-6xl tracking-tight leading-none",
+      "h2": "text-2xl sm:text-3xl lg:text-4xl tracking-tight",
+      "h3": "text-xl sm:text-2xl font-bold",
+      "body": "text-base sm:text-lg text-zinc-300 leading-relaxed",
+      "overline": "uppercase tracking-[0.2em] text-xs font-bold text-orange-500"
+    }
+  },
+  "colors": {
+    "background": {
+      "primary": "#0A0A0A",
+      "secondary": "#18181B",
+      "glass": "bg-black/60 backdrop-blur-xl"
+    },
+    "surface": {
+      "card": "#18181B",
+      "card_hover": "#27272A",
+      "border": "#3F3F46"
+    },
+    "accent": {
+      "primary": "#FF5722",
+      "primary_hover": "#F4511E",
+      "glow": "rgba(255, 87, 34, 0.4)",
+      "success": "#10B981"
+    },
+    "text": {
+      "primary": "#FFFFFF",
+      "secondary": "#D4D4D8",
+      "muted": "#A1A1AA",
+      "inverse": "#FFFFFF"
+    }
+  },
+  "layout_and_spacing": {
+    "container": "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8",
+    "section_padding": "py-16 md:py-24",
+    "grid_system": {
+      "bento": "grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8",
+      "cards": "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+    },
+    "borders": {
+      "radius": "rounded-none md:rounded-lg",
+      "style": "border border-zinc-800"
+    }
+  },
+  "components": {
+    "buttons": {
+      "primary": "bg-[#FF5722] hover:bg-[#F4511E] text-white font-bold py-4 px-8 rounded-md transition-all duration-300 shadow-[0_0_15px_rgba(255,87,34,0.3)] hover:shadow-[0_0_25px_rgba(255,87,34,0.5)] transform hover:-translate-y-1 w-full text-lg sm:text-xl",
+      "secondary": "bg-zinc-800 hover:bg-zinc-700 text-white font-semibold py-3 px-6 rounded-md transition-all duration-200 border border-zinc-700",
+      "floating_action": "fixed bottom-4 left-4 right-4 z-50 bg-[#18181B]/95 backdrop-blur border border-zinc-800 p-3 rounded-xl flex justify-between items-center shadow-2xl md:hidden"
+    },
+    "cards": {
+      "default": "bg-zinc-900 border border-zinc-800 rounded-lg p-6 hover:border-zinc-700 transition-colors",
+      "pricing_selected": "bg-zinc-900 border-2 border-[#FF5722] rounded-lg p-6 relative overflow-hidden"
+    },
+    "inputs": {
+      "style": "bg-zinc-950 border border-zinc-800 text-white rounded-md p-3 focus:border-[#FF5722] focus:ring-1 focus:ring-[#FF5722] outline-none transition-all w-full"
+    }
+  },
+  "sections": {
+    "landing_page": {
+      "hero": {
+        "layout": "Grid with image gallery on one side and content/CTA on the other",
+        "elements": [
+          "Urgency Countdown Timer (e.g. 'অফার শেষ হতে বাকি')",
+          "Title: 'স্মার্ট পেন নাইফ'",
+          "Subtitle: 'পকেটে রাখুন, প্রয়োজনে ব্যবহার করুন — স্মার্ট হিডেন নাইফ পেন!'",
+          "Image gallery (Swiper or Grid with thumbnails)",
+          "Price block with strike-through original price",
+          "Primary CTA: 'অর্ডার করতে চাই'"
+        ]
+      },
+      "trust_badges": {
+        "layout": "Horizontal scroll or flex wrap below hero",
+        "items": [
+          {"icon": "ShieldCheck", "text": "স্টেইনলেস স্টিল"},
+          {"icon": "Pocket", "text": "পকেট সাইজ"},
+          {"icon": "CheckCircle", "text": "১০০% কার্যকর"},
+          {"icon": "Truck", "text": "ক্যাশ অন ডেলিভারি"}
+        ]
+      },
+      "packages": {
+        "layout": "3 Column grid or vertical stack (Mobile)",
+        "details": [
+          {"name": "১ পিস", "price": "৳৬৯০", "popular": false},
+          {"name": "২ পিস", "price": "৳১১৯০", "save": "সেভ ৳১৯০", "popular": true},
+          {"name": "৩ পিস", "price": "৳১৫৯০", "save": "সর্বোচ্চ সাশ্রয়", "popular": false}
+        ]
+      },
+      "order_form": {
+        "layout": "Two column on desktop: Form on left, Order Summary on right",
+        "fields": ["আপনার নাম", "মোবাইল নাম্বার", "সম্পূর্ন ঠিকানা"],
+        "delivery_options": ["ঢাকার ভিতরে: ৳৬০", "ঢাকার বাহিরে: ৳১১০"],
+        "note": "ক্যাশ অন ডেলিভারি — পণ্যটি হাতে নিয়ে চেক করে পেমেন্ট করুন।"
+      },
+      "how_it_works": {
+        "layout": "Vertical timeline or 3-step grid",
+        "steps": [
+          {"title": "পেন মোড", "desc": "বাইরে থেকে দেখলে সম্পূর্ণ সাধারণ স্টাইলিশ পেন।"},
+          {"title": "ক্যাপ খুলুন", "desc": "প্রয়োজনের সময় পেনের ক্যাপটি খুললেই ধারালো ব্লেড রেডি।"},
+          {"title": "ব্যবহার করুন", "desc": "কাজ শেষে আবার ক্যাপ লাগিয়ে পকেটে রেখে দিন।"}
+        ]
+      },
+      "why_choose_us": {
+        "layout": "Bento grid or 2x2 feature grid",
+        "points": [
+          "ছোট, হালকা, সহজে বহনযোগ্য",
+          "স্টেইনলেস স্টিল ব্লেড, মরিচা পড়বে না",
+          "দৈনন্দিন কাজে বা আত্মরক্ষায় দারুণ",
+          "প্রিমিয়াম লুক ও ডিজাইন"
+        ]
+      },
+      "reviews": {
+        "layout": "Masonry or Carousel of review cards",
+        "style": "Dark cards with gold stars (text-yellow-500)"
+      },
+      "faq": {
+        "layout": "Shadcn Accordion component",
+        "style": "Border bottom separators, no boxes"
+      }
+    },
+    "admin_panel": {
+      "layout": "Sidebar navigation (left) + Main content area (right)",
+      "dashboard": {
+        "stats": ["Total Orders", "Revenue", "Pending Deliveries"],
+        "charts": "Recharts Area chart for last 7 days orders"
+      },
+      "orders_list": {
+        "table": "Shadcn Table with columns: ID, Customer, Phone, Package, Status (Dropdown), Action",
+        "status_colors": {
+          "Pending": "text-yellow-500 bg-yellow-500/10",
+          "Confirmed": "text-blue-500 bg-blue-500/10",
+          "Shipped": "text-purple-500 bg-purple-500/10",
+          "Delivered": "text-green-500 bg-green-500/10"
+        }
+      }
+    }
+  },
+  "media": {
+    "image_urls": [
+      {
+        "category": "hero_product_1",
+        "url": "https://nooranishop.com/wp-content/uploads/2026/05/Hd499a0d914fe4a2592904dc70abe6a4dQ.jpg",
+        "description": "Main product image showing the pen knife closed"
+      },
+      {
+        "category": "hero_product_2",
+        "url": "https://nooranishop.com/wp-content/uploads/2026/05/H429c9dc0120a427b8e64f87f6204b296P.jpg",
+        "description": "Product image showing the knife open"
+      },
+      {
+        "category": "hero_product_3",
+        "url": "https://nooranishop.com/wp-content/uploads/2026/05/H5d2a85b1accc47e4bd47fedd41533455s.jpg",
+        "description": "Detail shot of the knife blade"
+      },
+      {
+        "category": "hero_product_4",
+        "url": "https://nooranishop.com/wp-content/uploads/2026/05/H74f5ef4d60ea48b88dfdace40e644fcck.jpg",
+        "description": "Lifestyle shot or size comparison"
+      },
+      {
+        "category": "background_texture",
+        "url": "https://images.unsplash.com/photo-1614607453779-44602e149456?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2Nzd8MHwxfHNlYXJjaHwxfHx0YWN0aWNhbCUyMHBvY2tldCUyMGtuaWZlJTIwZGFya3xlbnwwfHx8fDE3Nzg1Mzc3NTZ8MA&ixlib=rb-4.1.0&q=85",
+        "description": "Dark metallic/tactical background for hero section overlay"
+      }
+    ]
+  },
+  "animation_guidelines": {
+    "scroll": "Use Lenis for smooth momentum scrolling.",
+    "reveal": "Framer Motion staggered fade-in-up for lists (packages, steps, features).",
+    "micro_interactions": "Hover scale on buttons, glowing border tracing effect on the 'Popular Package' card."
+  },
+  "icons": {
+    "library": "lucide-react",
+    "instructions": "Use lucide-react (already installed) for all UI icons. Keep stroke-width consistent (1.5 or 2)."
+  },
+  "instructions_to_main_agent": [
+    "Install `lenis` for smooth scrolling in the landing page.",
+    "Include `Hind Siliguri` (Bengali) and `Chivo` (English/Display) from Google Fonts in the HTML head.",
+    "Implement the landing page in standard React/Tailwind components, using Framer Motion for scroll reveal animations.",
+    "For the admin panel, rely on Shadcn UI components (Table, Dialog, Select, DropdownMenu) heavily.",
+    "Ensure all interactive elements have `data-testid` attributes as specified in rules.",
+    "The sticky mobile bar should only appear on mobile devices (md:hidden) and contain 'Call' and 'Order' actions.",
+    "Forms must handle basic validation before showing a success state (mocked order submission)."
+  ]
+}
