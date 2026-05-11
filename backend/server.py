@@ -94,6 +94,7 @@ class Product(BaseModel):
     final_cta_note: str = "ক্যাশ অন ডেলিভারি | গোপন প্যাকেজিং | ১০০% অরিজিনাল"
     footer_message: str = "বিশ্বাসের আরেক নাম — শতভাগ কোয়ালিটি গ্যারান্টিসহ"
     site_name: str = "ম্যাজিক টিস্যু"
+    fb_pixel_id: Optional[str] = None  # Facebook Pixel ID for ads conversion tracking
     trust_badges: List[TrustBadge] = []
     updated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
@@ -131,6 +132,7 @@ class ProductUpdate(BaseModel):
     final_cta_note: Optional[str] = None
     footer_message: Optional[str] = None
     site_name: Optional[str] = None
+    fb_pixel_id: Optional[str] = None
     trust_badges: Optional[List[TrustBadge]] = None
 
 

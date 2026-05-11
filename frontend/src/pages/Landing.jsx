@@ -47,6 +47,7 @@ const COLOR_CLASSES = {
 import Countdown from "../components/Countdown";
 import Reveal from "../components/Reveal";
 import { getProduct, createOrder } from "../lib/api";
+import { useFacebookPixel, fbqTrack } from "../lib/fbPixel";
 
 const toBn = (val) => {
   const map = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
@@ -68,6 +69,9 @@ export default function Landing() {
   const [form, setForm] = useState({ name: "", phone: "", address: "", note: "" });
   const [submitting, setSubmitting] = useState(false);
   const [openFaq, setOpenFaq] = useState(0);
+
+  // Initialize Facebook Pixel once product loads
+  useFacebookPixel(product?.fb_pixel_id);
 
   useEffect(() => {
     getProduct()
@@ -94,6 +98,14 @@ export default function Landing() {
 
   const scrollToOrder = () => {
     document.getElementById("order-form")?.scrollIntoView({ behavior: "smooth" });
+    // Track ad funnel event
+    fbqTrack("InitiateCheckout", {
+      content_name: product?.title,
+      content_ids: selectedPkg ? [selectedPkg.id] : [],
+      value: total,
+      currency: "BDT",
+      num_items: qty,
+    });
   };
 
   const submitOrder = async (e) => {
@@ -103,7 +115,7 @@ export default function Landing() {
     if (!form.address.trim() || form.address.trim().length < 3) return toast.error("আপনার ঠিকানা লিখুন");
     setSubmitting(true);
     try {
-      await createOrder({
+      const created = await createOrder({
         name: form.name,
         phone: form.phone,
         address: form.address,
@@ -115,6 +127,16 @@ export default function Landing() {
         delivery_area: area,
         delivery_charge: deliveryCharge,
         total,
+      });
+      // Fire Facebook Pixel Purchase event for conversion tracking
+      fbqTrack("Purchase", {
+        content_name: product?.title,
+        content_ids: [selectedPkg.id],
+        content_type: "product",
+        value: total,
+        currency: "BDT",
+        num_items: qty,
+        order_id: created?.id,
       });
       toast.success("অর্ডার সফল হয়েছে! আমরা শীঘ্রই কল করব।");
       setForm({ name: "", phone: "", address: "", note: "" });
@@ -334,7 +356,7 @@ export default function Landing() {
           </div>
           <form onSubmit={submitOrder} className="card-white p-5 sm:p-7 space-y-4" data-testid="order-form">
             <div>
-              <label className="label font-bn">আপনার নাম <span className="text-[var(--ink-muted)] font-normal text-xs">(optional)</span></label>
+              <label className="label font-bn">আপনার নাম</label>
               <input className="input" type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="আপনার পুরো নাম" data-testid="order-name-input" />
             </div>
             <div>

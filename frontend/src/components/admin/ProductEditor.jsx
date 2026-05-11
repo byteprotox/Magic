@@ -140,6 +140,7 @@ export default function ProductEditor({ product, onChange }) {
     phone: product.phone,
     whatsapp: product.whatsapp,
     facebook: product.facebook,
+    fb_pixel_id: product.fb_pixel_id || "",
     delivery_inside_dhaka: product.delivery_inside_dhaka,
     delivery_outside_dhaka: product.delivery_outside_dhaka,
     rating: product.rating,
@@ -249,6 +250,30 @@ export default function ProductEditor({ product, onChange }) {
           <div className="grid grid-cols-2 gap-3">
             <Field label="Inside Dhaka (৳)" type="number" value={form.delivery_inside_dhaka} onChange={(v) => setF("delivery_inside_dhaka", v)} />
             <Field label="Outside Dhaka (৳)" type="number" value={form.delivery_outside_dhaka} onChange={(v) => setF("delivery_outside_dhaka", v)} />
+          </div>
+        </div>
+      </Section>
+
+      {/* ===== Facebook Pixel (Ads tracking) ===== */}
+      <Section icon={ShieldCheck} title="Facebook Pixel (Ads Conversion Tracking)" subtitle="Track PageView, InitiateCheckout, and Purchase events">
+        <div className="space-y-3">
+          <Field
+            label="Facebook Pixel ID"
+            value={form.fb_pixel_id}
+            onChange={(v) => setF("fb_pixel_id", v)}
+            placeholder="e.g. 1234567890123456"
+            hint="Get this from Meta Events Manager → Data Sources → your Pixel → Settings. Leave empty to disable tracking."
+          />
+          <div className="bg-zinc-900/60 border border-zinc-800 rounded-md p-4 text-sm text-zinc-300 font-en">
+            <div className="font-bold text-white mb-2">Events sent automatically:</div>
+            <ul className="space-y-1.5 list-disc list-inside text-zinc-400">
+              <li><code className="text-[#ff5722]">PageView</code> — when landing page loads</li>
+              <li><code className="text-[#ff5722]">InitiateCheckout</code> — when user clicks any "Order Now" CTA</li>
+              <li><code className="text-[#ff5722]">Purchase</code> — when order submits successfully (with value, currency=BDT, order_id)</li>
+            </ul>
+            <p className="mt-3 text-xs text-zinc-500">
+              In Meta Ads Manager, optimize your campaigns for the <strong className="text-zinc-300">Purchase</strong> event for best results.
+            </p>
           </div>
         </div>
       </Section>
