@@ -1,0 +1,37 @@
+{
+  "summary": "Full e2e testing of Smart Pen Knife (Bengali COD landing + admin) — 18/18 backend tests pass, all frontend flows verified: landing render, package selection updates total, order submission with toast success, phone/address validation, admin login (wrong vs right password), dashboard stats, order status update, product save, logout, mobile sticky bar visibility (mobile only).",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Landing — order form package <select>", "issues": ["React dev-mode hydration warning: a <span> appears inside <option>. The warning originates from an injected 'x-component' visual-editor wrapper, not from Landing.jsx code (the JSX is plain text). Non-blocking but worth noting; if seen in production builds, consider rendering option label via a variable to avoid the wrapper auto-injecting children."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/backend_test.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "server.py uses deprecated FastAPI `@app.on_event('startup'/'shutdown')` — consider migrating to lifespan context manager (non-blocking, future-proofing).",
+    "ProductUpdate.offer_end_iso cannot be set to None via PUT because the route filters out None values (`if v is not None`). If admin wants to clear the offer end, this silently no-ops. Consider using a sentinel or model_fields_set check.",
+    "Order/Product mongo writes don't use upsert for `ensure_product`; concurrent first-call could race, but the `if not existing` guard mitigates for normal usage.",
+    "AdminDashboard.jsx is ~615 lines — close to the 700-line guideline; OrdersTab / ProductTab could be split into separate files for maintainability.",
+    "No rate limit / brute-force protection on /api/admin/login — single-admin password-only auth is by design but a simple delay on wrong password would be prudent.",
+    "Frontend allows package <select> change without scrolling; this is OK, just noting that package buttons auto-scroll to order form (intentional UX)."
+  ],
+  "updated_files": [
+    "/app/backend/tests/backend_test.py (created)"
+  ],
+  "success_rate": {"backend": "100% (18/18)", "frontend": "100% of tested flows"},
+  "test_credentials": "Admin password: admin123 (from /app/memory/test_credentials.md). Token issued: penknife-admin-secret-token-2026.",
+  "seed_data_creation": "Test orders are created during test runs (TEST Buyer / TEST Buyer UI) — backend test deletes its own order; the UI test leaves one order in DB. Admin orders list confirmed visible.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Backend regression suite is at /app/backend/tests/backend_test.py and covers product GET/PUT (auth), admin login/verify, orders CRUD with status transitions and validation, and stats. Run: REACT_APP_BACKEND_URL=https://sharp-mini-tools.preview.emergentagent.com pytest backend/tests/backend_test.py -v. Landing data-testids: landing-page, hero-title, package-{n}pcs, area-inside-dhaka/outside-dhaka, order-name-input, order-phone-input, order-address-input, order-package-select, qty-increase/decrease, order-total, order-submit-button, mobile-sticky-bar. Admin testids: admin-login-form, admin-password-input, admin-login-button, admin-dashboard, nav-dashboard/orders/product, stat-total-orders, orders-table, status-{id}, delete-{id}, save-product, logout-button. The only console noise on landing is a hydration warning from the visual editor's injected span wrappers inside <option> — not a code bug.",
+  "rca of the issue": "N/A — no failures."
+}
