@@ -14,6 +14,7 @@ import {
   ShieldCheck,
   Lock,
   Award,
+  Facebook,
 } from "lucide-react";
 import Countdown from "../components/Countdown";
 import Reveal from "../components/Reveal";
@@ -458,7 +459,7 @@ export default function Landing() {
           <p className="font-bn text-[var(--ink-soft)] mb-4">হাজার হাজার পুরুষ ইতিমধ্যে উপকৃত হয়েছেন — আপনার পালা!</p>
           <p className="font-bn text-base mb-1">এখনই অর্ডার করুন — <span className="font-en font-black text-[var(--primary)]">Starter Pack মাত্র ৳{toBn(product.packages[0].price)}</span></p>
           <p className="font-bn text-xs text-[var(--ink-muted)] mb-6">ক্যাশ অন ডেলিভারি | গোপন প্যাকেজিং | ১০০% অরিজিনাল</p>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-2xl mx-auto">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-3xl mx-auto">
             <a href={`tel:${product.phone}`} className="btn-outline" data-testid="cta-call">
               <Phone size={16} /> 📞 কল
             </a>
@@ -467,6 +468,9 @@ export default function Landing() {
             </button>
             <a href={`https://wa.me/${product.whatsapp.replace(/[^0-9]/g, "")}`} target="_blank" rel="noreferrer" className="btn-outline" data-testid="cta-whatsapp">
               <MessageCircle size={16} /> 💬 WhatsApp
+            </a>
+            <a href={product.facebook} target="_blank" rel="noreferrer" className="btn-outline" data-testid="cta-facebook">
+              <Facebook size={16} /> Facebook
             </a>
           </div>
         </Reveal>
@@ -479,6 +483,15 @@ export default function Landing() {
             বিশ্বাসের আরেক নাম — শতভাগ কোয়ালিটি গ্যারান্টিসহ
           </div>
           <p className="font-bn text-sm">যে কোনো প্রয়োজনে কল করুন: <a href={`tel:${product.phone}`} className="text-yellow-300 font-en font-bold">{toBn(product.phone)}</a></p>
+          <div className="mt-3 flex items-center justify-center gap-3 flex-wrap">
+            <a href={product.facebook} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-sm text-white/90 hover:text-yellow-300 font-bn" data-testid="footer-facebook">
+              <Facebook size={16} /> Facebook
+            </a>
+            <span className="text-white/30">•</span>
+            <a href={`https://wa.me/${product.whatsapp.replace(/[^0-9]/g, "")}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-sm text-white/90 hover:text-yellow-300 font-bn" data-testid="footer-whatsapp">
+              <MessageCircle size={16} /> WhatsApp
+            </a>
+          </div>
           <p className="font-bn text-xs mt-4 text-white/50">© {new Date().getFullYear()} ম্যাজিক টিস্যু — সব অধিকার সংরক্ষিত</p>
         </div>
       </footer>
