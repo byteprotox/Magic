@@ -1,4 +1,4 @@
-"""Backend API tests for Smart Pen Knife landing page."""
+"""Backend API tests for Magic Tissue landing page (iteration 2)."""
 import os
 import pytest
 import requests
@@ -29,11 +29,14 @@ class TestProduct:
         for k in ["title", "packages", "reviews", "faqs", "features", "images", "offer_end_iso",
                   "delivery_inside_dhaka", "delivery_outside_dhaka"]:
             assert k in d, f"missing {k}"
-        assert len(d["packages"]) >= 3
+        assert len(d["packages"]) >= 2
         assert d["delivery_inside_dhaka"] == 60
-        assert d["delivery_outside_dhaka"] == 110
+        assert d["delivery_outside_dhaka"] == 120
         prices = [p["price"] for p in d["packages"]]
-        assert 690 in prices and 1190 in prices and 1590 in prices
+        pieces = [p["pieces"] for p in d["packages"]]
+        assert 490 in prices and 900 in prices
+        assert 10 in pieces and 20 in pieces
+        assert "ম্যাজিক টিস্যু" in d["title"]
 
     def test_update_product_requires_auth(self):
         r = requests.put(f"{API}/product", json={"title": "x"}, timeout=15)
@@ -42,7 +45,7 @@ class TestProduct:
     def test_update_product_with_auth(self, auth_headers):
         # capture original
         orig = requests.get(f"{API}/product", timeout=15).json()
-        new_title = "স্মার্ট পেন নাইফ TEST"
+        new_title = "ম্যাজিক টিস্যু TEST"
         r = requests.put(f"{API}/product", json={"title": new_title}, headers=auth_headers, timeout=15)
         assert r.status_code == 200
         assert r.json()["title"] == new_title
@@ -82,12 +85,12 @@ def _order_payload(phone="01711111111", address="Dhanmondi 32, Dhaka"):
         "address": address,
         "note": "test",
         "package_id": "pkg-1",
-        "package_name": "১ পিস স্মার্ট পেন নাইফ",
-        "package_price": 690,
+        "package_name": "Starter Pack — ১০ পিস",
+        "package_price": 490,
         "quantity": 1,
         "delivery_area": "inside_dhaka",
         "delivery_charge": 60,
-        "total": 750,
+        "total": 550,
     }
 
 
@@ -99,7 +102,7 @@ class TestOrders:
         assert r.status_code == 200, r.text
         d = r.json()
         assert d["status"] == "pending"
-        assert d["total"] == 750
+        assert d["total"] == 550
         assert "id" in d
         TestOrders.created_id = d["id"]
         # verify it appears in list

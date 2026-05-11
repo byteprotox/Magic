@@ -15,7 +15,7 @@ function App() {
           <Route path="/admin" element={<AdminDashboard />} />
         </Routes>
       </BrowserRouter>
-      <Toaster theme="dark" position="top-center" richColors />
+      <Toaster theme="light" position="top-center" richColors />
     </div>
   );
 }

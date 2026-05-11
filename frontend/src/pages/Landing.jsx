@@ -3,84 +3,42 @@ import { toast } from "sonner";
 import {
   Phone,
   MessageCircle,
-  Facebook,
   ShoppingCart,
   Check,
-  ShieldCheck,
-  Truck,
-  PackageCheck,
-  Sparkles,
   Star,
   ChevronDown,
-  Zap,
+  Minus,
+  Plus,
+  Sparkles,
+  Truck,
+  ShieldCheck,
   Lock,
   Award,
-  Pencil,
-  Scissors,
-  RotateCcw,
 } from "lucide-react";
 import Countdown from "../components/Countdown";
 import Reveal from "../components/Reveal";
 import { getProduct, createOrder } from "../lib/api";
 
-const toBnDigits = (val) => {
+const toBn = (val) => {
   const map = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
   return String(val).replace(/[0-9]/g, (d) => map[Number(d)]);
 };
 
-const STAR = ({ filled }) =>
+const STAR = ({ filled, size = 16 }) =>
   filled ? (
-    <Star size={16} className="star-on fill-yellow-400" />
+    <Star size={size} className="star-on" fill="currentColor" />
   ) : (
-    <Star size={16} className="star-off" />
+    <Star size={size} className="star-off" />
   );
-
-const TRUST = [
-  { icon: ShieldCheck, label: "স্টেইনলেস স্টিল" },
-  { icon: PackageCheck, label: "অরিজিনাল প্রোডাক্ট" },
-  { icon: Truck, label: "ক্যাশ অন ডেলিভারি" },
-  { icon: Lock, label: "গোপন প্যাকেজিং" },
-];
-
-const HOW = [
-  {
-    icon: Pencil,
-    title: "পেন মোড",
-    desc: "বাইরে থেকে দেখলে সম্পূর্ণ সাধারণ স্টাইলিশ পেন — কেউ বুঝতেই পারবে না।",
-  },
-  {
-    icon: Scissors,
-    title: "ক্যাপ খুলুন",
-    desc: "প্রয়োজনের সময় পেনের ক্যাপটি খুললেই ধারালো স্টেইনলেস ব্লেড রেডি।",
-  },
-  {
-    icon: RotateCcw,
-    title: "আবার পকেটে",
-    desc: "কাজ শেষে ক্যাপ লাগিয়ে পেনের মতো করেই পকেটে রেখে দিন।",
-  },
-];
-
-const WHY = [
-  { icon: Award, title: "প্রিমিয়াম বিল্ড", desc: "মেটাল বডি, স্ক্র্যাচ-রেজিস্ট্যান্ট ফিনিশ" },
-  { icon: Zap, title: "শার্প ব্লেড", desc: "একবারে কাটে — অফিস, কুরিয়ার, ফল কাটা সবই" },
-  { icon: Lock, title: "গোপন ডিজাইন", desc: "দেখতে পেন — বহন করা সহজ ও নিরাপদ" },
-  { icon: ShieldCheck, title: "রাস্ট-প্রুফ", desc: "স্টেইনলেস স্টিল ব্লেড — মরিচা পড়বে না" },
-];
 
 export default function Landing() {
   const [product, setProduct] = useState(null);
   const [selectedPkgId, setSelectedPkgId] = useState(null);
   const [qty, setQty] = useState(1);
   const [area, setArea] = useState("inside_dhaka");
-  const [form, setForm] = useState({
-    name: "",
-    phone: "",
-    address: "",
-    note: "",
-  });
+  const [form, setForm] = useState({ name: "", phone: "", address: "", note: "" });
   const [submitting, setSubmitting] = useState(false);
-  const [openFaq, setOpenFaq] = useState(null);
-  const [activeImg, setActiveImg] = useState(0);
+  const [openFaq, setOpenFaq] = useState(0);
 
   useEffect(() => {
     getProduct()
@@ -96,14 +54,10 @@ export default function Landing() {
     () => product?.packages.find((p) => p.id === selectedPkgId),
     [product, selectedPkgId]
   );
-
   const deliveryCharge = useMemo(() => {
     if (!product) return 0;
-    return area === "inside_dhaka"
-      ? product.delivery_inside_dhaka
-      : product.delivery_outside_dhaka;
+    return area === "inside_dhaka" ? product.delivery_inside_dhaka : product.delivery_outside_dhaka;
   }, [product, area]);
-
   const total = useMemo(() => {
     if (!selectedPkg) return 0;
     return selectedPkg.price * qty + deliveryCharge;
@@ -115,18 +69,9 @@ export default function Landing() {
 
   const submitOrder = async (e) => {
     e?.preventDefault();
-    if (!selectedPkg) {
-      toast.error("একটি প্যাকেজ নির্বাচন করুন");
-      return;
-    }
-    if (!form.phone.trim() || form.phone.trim().length < 6) {
-      toast.error("সঠিক মোবাইল নম্বর দিন");
-      return;
-    }
-    if (!form.address.trim() || form.address.trim().length < 3) {
-      toast.error("আপনার ঠিকানা লিখুন");
-      return;
-    }
+    if (!selectedPkg) return toast.error("একটি প্যাকেজ নির্বাচন করুন");
+    if (!form.phone.trim() || form.phone.trim().length < 6) return toast.error("সঠিক মোবাইল নম্বর দিন");
+    if (!form.address.trim() || form.address.trim().length < 3) return toast.error("আপনার ঠিকানা লিখুন");
     setSubmitting(true);
     try {
       await createOrder({
@@ -146,9 +91,7 @@ export default function Landing() {
       setForm({ name: "", phone: "", address: "", note: "" });
       setQty(1);
     } catch (err) {
-      toast.error(
-        err?.response?.data?.detail || "অর্ডার সাবমিট করতে সমস্যা হয়েছে"
-      );
+      toast.error(err?.response?.data?.detail || "অর্ডার সাবমিট করতে সমস্যা হয়েছে");
     } finally {
       setSubmitting(false);
     }
@@ -156,611 +99,401 @@ export default function Landing() {
 
   if (!product) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a] text-zinc-400">
+      <div className="min-h-screen flex items-center justify-center bg-[var(--bg)] text-zinc-600">
         <div className="font-bn">লোড হচ্ছে...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white pb-24 md:pb-0" data-testid="landing-page">
-      {/* Top banner */}
-      <div className="bg-[#ff5722] text-white text-center py-2 px-3 text-sm font-semibold flex items-center justify-center gap-2 sm:gap-4 flex-wrap" data-testid="top-banner">
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--ink)] pb-28 md:pb-0" data-testid="landing-page">
+      {/* ==== Top urgency banner ==== */}
+      <div className="bg-[var(--primary)] text-white text-center py-2 px-3 text-sm font-bold flex items-center justify-center gap-3 flex-wrap" data-testid="top-banner">
         <Sparkles size={14} />
-        <span>সীমিত সময়ের অফার! ক্যাশ অন ডেলিভারি</span>
+        <span className="font-bn">অফার সীমিত সময়ের জন্য! আজই অর্ডার করুন — ক্যাশ অন ডেলিভারি</span>
         {product.offer_end_iso && <Countdown endIso={product.offer_end_iso} />}
       </div>
 
-      {/* Hero */}
-      <section className="hero-grid-bg relative overflow-hidden">
-        <div className="absolute inset-0 dot-grid opacity-40" />
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-20 grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-          {/* Left: text */}
-          <Reveal>
-            <div className="space-y-6">
-              <span className="badge-pill" data-testid="hero-badge">
-                <Sparkles size={12} /> অরিজিনাল প্রোডাক্ট • ১০০% গ্যারান্টি
-              </span>
-              <h1 className="section-title text-4xl sm:text-5xl lg:text-6xl font-bn font-bold leading-tight" data-testid="hero-title">
-                {product.title}
-              </h1>
-              <p className="text-lg sm:text-xl text-zinc-300 font-bn max-w-xl" data-testid="hero-subtitle">
-                {product.subtitle} — {product.tagline}
-              </p>
-              <div className="flex items-center gap-1" data-testid="hero-rating">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <STAR key={i} filled={i <= Math.round(product.rating)} />
-                ))}
-                <span className="ml-2 text-sm text-zinc-400 font-en">
-                  {product.rating} ({toBnDigits(product.review_count)} রিভিউ)
-                </span>
-              </div>
-
-              <ul className="space-y-2.5 pt-2">
-                {product.features.slice(0, 4).map((f, i) => (
-                  <li key={i} className="flex items-start gap-3 text-zinc-200" data-testid={`hero-feature-${i}`}>
-                    <span className="mt-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#ff5722]/15 text-[#ff5722]">
-                      <Check size={12} strokeWidth={3} />
-                    </span>
-                    <span className="font-bn">{f}</span>
-                  </li>
-                ))}
-              </ul>
-
-              <div className="flex items-baseline gap-3 pt-2">
-                <div className="overline">আজকের অফার</div>
-              </div>
-              <div className="flex items-baseline gap-3">
-                <div className="font-en font-black text-4xl sm:text-5xl text-white">
-                  ৳{toBnDigits(product.packages[0]?.price ?? 0)}
-                </div>
-                {product.packages[0]?.original_price && (
-                  <div className="text-zinc-500 line-through font-en text-xl">
-                    ৳{toBnDigits(product.packages[0].original_price)}
-                  </div>
-                )}
-                <div className="text-[#ff5722] font-bn font-semibold">থেকে শুরু</div>
-              </div>
-
-              <button
-                onClick={scrollToOrder}
-                className="btn-primary glow-pulse max-w-md text-lg"
-                data-testid="hero-cta-button"
-              >
-                <ShoppingCart size={20} /> এখনই অর্ডার করুন
-              </button>
-            </div>
-          </Reveal>
-
-          {/* Right: gallery */}
-          <Reveal delay={150}>
-            <div className="relative" data-testid="hero-gallery">
-              <div className="absolute -inset-6 bg-[#ff5722]/10 blur-3xl rounded-full" />
-              <div className="relative card overflow-hidden">
-                <img
-                  src={product.images[activeImg]}
-                  alt={product.title}
-                  className="w-full aspect-square object-cover"
-                  data-testid="hero-main-image"
-                />
-                <div className="absolute top-3 left-3 badge-pill bg-black/70 text-white border-zinc-700">
-                  <Lock size={12} /> গোপন প্যাকেজিং
-                </div>
-              </div>
-              <div className="mt-3 grid grid-cols-5 gap-2">
-                {product.images.slice(0, 5).map((src, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setActiveImg(i)}
-                    className={`card overflow-hidden aspect-square ${
-                      activeImg === i ? "ring-2 ring-[#ff5722]" : ""
-                    }`}
-                    data-testid={`hero-thumb-${i}`}
-                  >
-                    <img src={src} alt={`thumb-${i}`} className="w-full h-full object-cover" />
-                  </button>
-                ))}
-              </div>
-            </div>
-          </Reveal>
+      {/* ==== Marquee ticker ==== */}
+      <div className="bg-yellow-300 border-y-2 border-yellow-500 py-1.5 ticker-wrap text-sm font-bn font-bold text-[#7c2d12]">
+        <div className="ticker">
+          🔥 আজকের স্পেশাল অফার — Starter Pack মাত্র ৳৪৯০ ✦ গোপন প্যাকেজিং ✦ ক্যাশ অন ডেলিভারি ✦ জার্মান ল্যাব টেস্টেড ✦ সাইড ইফেক্ট মুক্ত ✦ ২৪-৭২ ঘণ্টায় ডেলিভারি ✦
         </div>
+      </div>
+
+      {/* ==== Hero ==== */}
+      <section className="max-w-5xl mx-auto px-4 sm:px-6 py-8 md:py-12">
+        <Reveal>
+          <div className="text-center">
+            <div className="inline-block bg-yellow-300 border-2 border-yellow-500 px-3 py-1 rounded-md text-xs font-bn font-bold text-[#7c2d12] mb-3">
+              ⭐ অরিজিনাল জার্মান প্রোডাক্ট • ১০০% কার্যকর
+            </div>
+            <h1 className="font-bn text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight" data-testid="hero-title">
+              {product.title}
+            </h1>
+            <p className="font-bn text-lg sm:text-xl mt-3 text-[var(--ink-soft)]" data-testid="hero-subtitle">
+              {product.subtitle}
+            </p>
+            <div className="flex items-center justify-center gap-1 mt-3" data-testid="hero-rating">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <STAR key={i} filled={i <= Math.round(product.rating)} size={18} />
+              ))}
+              <span className="ml-2 font-en text-sm text-[var(--ink-soft)]">
+                {product.rating} ({toBn(product.review_count)} রিভিউ)
+              </span>
+            </div>
+          </div>
+        </Reveal>
+
+        {/* Product images stacked grid (nooranishop style) */}
+        <Reveal delay={100}>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-8">
+            {product.images.slice(0, 6).map((src, i) => (
+              <div key={i} className="card-white overflow-hidden aspect-square bg-gradient-to-br from-pink-50 to-orange-50" data-testid={`hero-image-${i}`}>
+                <img src={src} alt={`product-${i}`} className="w-full h-full object-contain" />
+              </div>
+            ))}
+          </div>
+        </Reveal>
+
+        {/* Urgent callout */}
+        <Reveal>
+          <div className="mt-8 callout-danger text-center text-base sm:text-lg font-bn">
+            ⚠️ নকল কিনে পরে আফসোস নয়—শুরুতেই অরিজিনাল কোয়ালিটি নিন।
+            <div className="mt-2 text-sm font-semibold">এখন অর্ডার করলে পাচ্ছেন <span className="text-[var(--primary)]">বিশাল ছাড়।</span></div>
+          </div>
+        </Reveal>
+
+        {/* Price callout */}
+        <Reveal>
+          <div className="mt-6 text-center space-y-2">
+            {product.packages.map((p, i) => (
+              <div key={p.id} className={`inline-block px-4 py-2 rounded-md font-bn font-extrabold text-lg sm:text-2xl mr-2 ${p.popular ? "bg-[var(--primary)] text-white border-2 border-[#7f1d1d]" : "bg-yellow-300 text-[#7c2d12] border-2 border-yellow-500"}`} data-testid={`price-callout-${i}`}>
+                {p.popular && "🔥 "}
+                {p.pieces > 1 ? `${toBn(p.pieces)} পিস` : "১ প্যাক"} = {toBn(p.price)} টাকা
+                {p.save_label && <span className="block text-xs font-normal mt-1">({p.save_label})</span>}
+              </div>
+            ))}
+          </div>
+        </Reveal>
+
+        <Reveal>
+          <div className="mt-6 max-w-md mx-auto">
+            <button onClick={scrollToOrder} className="btn-cta pulse-cta font-bn" data-testid="hero-cta">
+              <ShoppingCart size={20} /> প্রথমে দেখুন, তারপর টাকা দিন!
+            </button>
+          </div>
+        </Reveal>
       </section>
 
-      {/* Trust badges strip */}
-      <section className="border-y border-zinc-900 bg-[#080808]">
-        <div className="max-w-7xl mx-auto px-4 py-6 grid grid-cols-2 md:grid-cols-4 gap-4">
-          {TRUST.map((t, i) => (
-            <div key={i} className="flex items-center gap-3" data-testid={`trust-${i}`}>
-              <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#ff5722]/10 text-[#ff5722]">
-                <t.icon size={20} />
-              </span>
-              <span className="text-sm sm:text-base font-bn text-zinc-200">{t.label}</span>
+      {/* ==== Why use this — nooranishop-style colorful box ==== */}
+      <section className="max-w-5xl mx-auto px-4 sm:px-6 py-6">
+        <Reveal>
+          <div className="text-center mb-6">
+            <div className="shop-heading text-2xl sm:text-3xl font-bn">
+              ✨ কেন ব্যবহার করবেন?
+            </div>
+          </div>
+          <div className="card-white p-6 sm:p-8">
+            <ul className="space-y-3">
+              {product.features.map((f, i) => (
+                <li key={i} className="flex items-start gap-3 font-bn text-base sm:text-lg" data-testid={`why-feature-${i}`}>
+                  <span className="text-2xl">👉</span>
+                  <span className="text-[var(--ink-soft)]">{f}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </Reveal>
+      </section>
+
+      {/* ==== Trust badges ==== */}
+      <section className="max-w-5xl mx-auto px-4 sm:px-6 py-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {[
+            { icon: Award, label: "জার্মান ল্যাব টেস্টেড", color: "bg-blue-50 text-blue-700 border-blue-200" },
+            { icon: ShieldCheck, label: "সাইড ইফেক্ট মুক্ত", color: "bg-green-50 text-green-700 border-green-200" },
+            { icon: Lock, label: "গোপন প্যাকেজিং", color: "bg-purple-50 text-purple-700 border-purple-200" },
+            { icon: Truck, label: "ক্যাশ অন ডেলিভারি", color: "bg-orange-50 text-orange-700 border-orange-200" },
+          ].map((b, i) => (
+            <div key={i} className={`border-2 rounded-lg p-4 text-center ${b.color}`} data-testid={`trust-${i}`}>
+              <b.icon size={28} className="mx-auto mb-2" />
+              <div className="text-sm font-bn font-bold">{b.label}</div>
             </div>
           ))}
         </div>
       </section>
 
-      {/* Why use this */}
-      <section className="py-16 md:py-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Reveal>
-            <div className="text-center max-w-3xl mx-auto mb-12">
-              <div className="overline mb-3">কেন ব্যবহার করবেন</div>
-              <h2 className="section-title text-3xl sm:text-4xl lg:text-5xl font-bn">
-                এক টুল, অসংখ্য কাজ
-              </h2>
-              <p className="text-zinc-400 mt-4 font-bn">
-                {product.description}
-              </p>
+      {/* ==== Quality focus banner ==== */}
+      <section className="max-w-5xl mx-auto px-4 sm:px-6 py-6">
+        <Reveal>
+          <div className="text-center mb-3">
+            <div className="shop-heading-yellow inline-block text-xl sm:text-2xl font-bn">
+              দামে নয়—আপনি ফোকাস করুন কোয়ালিটিতে
             </div>
-          </Reveal>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {WHY.map((w, i) => (
-              <Reveal key={i} delay={i * 100}>
-                <div className="card p-6 h-full" data-testid={`why-${i}`}>
-                  <span className="flex h-12 w-12 items-center justify-center rounded-lg bg-[#ff5722]/10 text-[#ff5722] mb-4">
-                    <w.icon size={24} />
-                  </span>
-                  <div className="font-bn font-bold text-lg mb-1.5">{w.title}</div>
-                  <div className="text-zinc-400 text-sm font-bn">{w.desc}</div>
-                </div>
-              </Reveal>
-            ))}
           </div>
-        </div>
+          <div className="card-white p-6 text-center font-bn text-[var(--ink-soft)]">
+            <p className="text-base sm:text-lg">এখনো ভাবছেন কিনবেন কিনা? <strong className="text-[var(--primary)]">{toBn(10000)}+ পরিবারও</strong> প্রথমবার আপনার মত চিন্তা করেছিল।</p>
+            <p className="mt-2 text-sm">আমাদের প্রোডাক্ট কিনে তারা এখন খুশি!</p>
+            <div className="mt-4 font-en font-black text-4xl sm:text-5xl text-[var(--green)]">
+              {toBn(10000)}+
+            </div>
+            <div className="text-sm font-bn font-bold mt-1">মানুষ এখন খুশি!</div>
+            <div className="mt-5 pt-5 border-t-2 border-dashed border-[var(--border-strong)]">
+              <p className="font-bn text-sm">যে কোনো প্রয়োজনে কল করুন</p>
+              <a href={`tel:${product.phone}`} className="font-en font-black text-2xl text-[var(--primary)] mt-1 inline-block" data-testid="phone-link">
+                {toBn(product.phone)}
+              </a>
+            </div>
+          </div>
+        </Reveal>
       </section>
 
-      {/* Packages */}
-      <section className="py-16 md:py-24 bg-[#080808] border-y border-zinc-900">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Reveal>
-            <div className="text-center max-w-2xl mx-auto mb-10">
-              <div className="overline mb-3">প্যাকেজ</div>
-              <h2 className="section-title text-3xl sm:text-4xl lg:text-5xl font-bn">
-                আপনার জন্য সেরা অফার বেছে নিন
-              </h2>
-              <p className="text-zinc-400 mt-3 font-bn text-sm">
-                একসাথে যত বেশি, তত বেশি সাশ্রয়
-              </p>
+      {/* ==== Packages selection ==== */}
+      <section className="max-w-5xl mx-auto px-4 sm:px-6 py-6">
+        <Reveal>
+          <div className="text-center mb-6">
+            <div className="shop-heading text-xl sm:text-2xl font-bn">
+              যেকোনো একটি সিলেক্ট করুন
             </div>
-          </Reveal>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            {product.packages.map((pkg, i) => {
+          </div>
+          <div className="space-y-3">
+            {product.packages.map((pkg) => {
               const isSelected = selectedPkgId === pkg.id;
               return (
-                <Reveal key={pkg.id} delay={i * 100}>
-                  <button
-                    onClick={() => {
-                      setSelectedPkgId(pkg.id);
-                      setTimeout(scrollToOrder, 250);
-                    }}
-                    className={`card p-6 text-left w-full h-full relative ${
-                      isSelected ? "ring-2 ring-[#ff5722] border-[#ff5722]" : ""
-                    }`}
-                    data-testid={`package-${pkg.pieces}pcs`}
-                  >
-                    {pkg.popular && (
-                      <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#ff5722] text-white text-xs font-bold px-3 py-1 rounded-full font-bn">
-                        🔥 জনপ্রিয়
-                      </span>
+                <button
+                  key={pkg.id}
+                  onClick={() => {
+                    setSelectedPkgId(pkg.id);
+                    setQty(1);
+                  }}
+                  className={`w-full card-white p-4 flex items-center gap-4 text-left ${
+                    isSelected ? "ring-2 ring-[var(--primary)] border-[var(--primary)]" : ""
+                  }`}
+                  data-testid={`package-${pkg.pieces}pcs`}
+                >
+                  <img src={product.images[0]} alt={pkg.name} className="w-16 h-16 sm:w-20 sm:h-20 rounded-md object-cover flex-shrink-0" />
+                  <div className="flex-1">
+                    <div className="font-bn font-bold text-base sm:text-lg">{pkg.name}</div>
+                    {pkg.popular && <span className="inline-block mt-1 text-xs font-bn font-bold bg-[var(--primary)] text-white px-2 py-0.5 rounded">🔥 জনপ্রিয়</span>}
+                    {pkg.save_label && <span className="inline-block mt-1 ml-1 text-xs font-bn font-bold bg-[var(--green)] text-white px-2 py-0.5 rounded">{pkg.save_label}</span>}
+                  </div>
+                  <div className="text-right">
+                    <div className="font-en font-black text-xl sm:text-2xl text-[var(--primary)]">৳ {toBn(pkg.price)}</div>
+                    {pkg.original_price && (
+                      <div className="text-sm font-en text-[var(--ink-muted)] line-through">৳ {toBn(pkg.original_price)}</div>
                     )}
-                    <div className="font-bn text-zinc-300 text-sm">
-                      {pkg.name}
-                    </div>
-                    <div className="flex items-baseline gap-2 mt-3">
-                      <div className="font-en font-black text-4xl">
-                        ৳{toBnDigits(pkg.price)}
-                      </div>
-                      {pkg.original_price && (
-                        <div className="text-zinc-500 line-through font-en text-base">
-                          ৳{toBnDigits(pkg.original_price)}
-                        </div>
-                      )}
-                    </div>
-                    {pkg.save_label && (
-                      <div className="mt-2 inline-block text-xs font-semibold bg-[#10B981]/10 text-emerald-400 px-2 py-1 rounded font-bn">
-                        {pkg.save_label}
-                      </div>
-                    )}
-                    <div className="mt-4 text-sm text-zinc-400 font-bn">
-                      প্রতি পিস ৳{toBnDigits(Math.round(pkg.price / pkg.pieces))}
-                    </div>
-                    <div className={`mt-6 text-center py-2 rounded-md text-sm font-bold transition-colors ${
-                      isSelected ? "bg-[#ff5722] text-white" : "bg-zinc-800 text-zinc-300"
-                    }`}>
-                      {isSelected ? "✓ নির্বাচিত" : "নির্বাচন করুন"}
-                    </div>
-                  </button>
-                </Reveal>
+                  </div>
+                  <div className={`hidden sm:flex h-7 w-7 items-center justify-center rounded-full border-2 flex-shrink-0 ${
+                    isSelected ? "bg-[var(--primary)] border-[var(--primary)] text-white" : "border-[var(--border-strong)]"
+                  }`}>
+                    {isSelected && <Check size={14} />}
+                  </div>
+                </button>
               );
             })}
           </div>
-
-          <div className="mt-8 text-center text-sm text-zinc-400 font-bn space-y-1">
-            <div>🚚 ঢাকার ভিতরে ডেলিভারি: <strong className="text-white font-en">৳{toBnDigits(product.delivery_inside_dhaka)}</strong></div>
-            <div>🚚 ঢাকার বাইরে ডেলিভারি: <strong className="text-white font-en">৳{toBnDigits(product.delivery_outside_dhaka)}</strong></div>
-            <div className="mt-2 text-zinc-500">💵 ক্যাশ অন ডেলিভারি — পণ্যটি হাতে নিয়ে চেক করে পেমেন্ট করুন।</div>
-          </div>
-        </div>
+        </Reveal>
       </section>
 
-      {/* Order Form */}
-      <section id="order-form" className="py-16 md:py-24">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Reveal>
-            <div className="text-center max-w-2xl mx-auto mb-10">
-              <div className="overline mb-3">ক্যাশ অন ডেলিভারি</div>
-              <h2 className="section-title text-3xl sm:text-4xl lg:text-5xl font-bn">
-                অর্ডার ফর্ম
-              </h2>
-              <p className="text-zinc-400 mt-3 font-bn text-sm">
-                নিচের তথ্য দিন, আমরা দ্রুত কনফার্ম কল করব
-              </p>
+      {/* ==== Order form ==== */}
+      <section id="order-form" className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
+        <Reveal>
+          <div className="text-center mb-6">
+            <div className="shop-heading text-xl sm:text-2xl font-bn">
+              📝 Billing details
             </div>
-          </Reveal>
+          </div>
+          <form onSubmit={submitOrder} className="card-white p-5 sm:p-7 space-y-4" data-testid="order-form">
+            <div>
+              <label className="label font-bn">আপনার নাম <span className="text-[var(--ink-muted)] font-normal text-xs">(optional)</span></label>
+              <input className="input" type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="আপনার পুরো নাম" data-testid="order-name-input" />
+            </div>
+            <div>
+              <label className="label font-bn">মোবাইল নাম্বার <span className="text-[var(--primary)]">*</span></label>
+              <input className="input" type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="01XXXXXXXXX" required data-testid="order-phone-input" />
+            </div>
+            <div>
+              <label className="label font-bn">আপনার সম্পূর্ন ঠিকানা লিখুন <span className="text-[var(--primary)]">*</span></label>
+              <textarea className="input" rows={3} value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="বাসা, রোড, এলাকা, থানা, জেলা" required data-testid="order-address-input" />
+            </div>
 
-          <Reveal>
-            <form
-              onSubmit={submitOrder}
-              className="card p-6 md:p-8 grid lg:grid-cols-2 gap-8"
-              data-testid="order-form"
-            >
-              {/* Left: Form fields */}
-              <div className="space-y-4">
-                <div>
-                  <label className="label">আপনার নাম (ঐচ্ছিক)</label>
-                  <input
-                    type="text"
-                    className="input"
-                    value={form.name}
-                    onChange={(e) => setForm({ ...form, name: e.target.value })}
-                    placeholder="আপনার পুরো নাম"
-                    data-testid="order-name-input"
-                  />
-                </div>
-                <div>
-                  <label className="label">মোবাইল নাম্বার *</label>
-                  <input
-                    type="tel"
-                    className="input"
-                    value={form.phone}
-                    onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                    placeholder="01XXXXXXXXX"
-                    required
-                    data-testid="order-phone-input"
-                  />
-                </div>
-                <div>
-                  <label className="label">সম্পূর্ণ ঠিকানা *</label>
-                  <textarea
-                    rows={3}
-                    className="input"
-                    value={form.address}
-                    onChange={(e) => setForm({ ...form, address: e.target.value })}
-                    placeholder="বাসা, রোড, এলাকা, থানা, জেলা"
-                    required
-                    data-testid="order-address-input"
-                  />
-                </div>
-                <div>
-                  <label className="label">ডেলিভারি এলাকা</label>
-                  <div className="grid grid-cols-2 gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setArea("inside_dhaka")}
-                      className={`card p-3 text-sm font-bn ${
-                        area === "inside_dhaka"
-                          ? "ring-2 ring-[#ff5722] border-[#ff5722]"
-                          : ""
-                      }`}
-                      data-testid="area-inside-dhaka"
-                    >
-                      ঢাকার ভিতরে
-                      <div className="text-xs text-zinc-400 mt-1 font-en">
-                        ৳{toBnDigits(product.delivery_inside_dhaka)}
-                      </div>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setArea("outside_dhaka")}
-                      className={`card p-3 text-sm font-bn ${
-                        area === "outside_dhaka"
-                          ? "ring-2 ring-[#ff5722] border-[#ff5722]"
-                          : ""
-                      }`}
-                      data-testid="area-outside-dhaka"
-                    >
-                      ঢাকার বাইরে
-                      <div className="text-xs text-zinc-400 mt-1 font-en">
-                        ৳{toBnDigits(product.delivery_outside_dhaka)}
-                      </div>
-                    </button>
-                  </div>
-                </div>
-                <div>
-                  <label className="label">নোট / অতিরিক্ত তথ্য (ঐচ্ছিক)</label>
-                  <input
-                    type="text"
-                    className="input"
-                    value={form.note}
-                    onChange={(e) => setForm({ ...form, note: e.target.value })}
-                    placeholder="বিশেষ কোনো নির্দেশনা থাকলে"
-                    data-testid="order-note-input"
-                  />
-                </div>
-              </div>
-
-              {/* Right: Summary */}
-              <div className="space-y-4">
-                <div className="card p-5 bg-[#0d0d0e]">
-                  <div className="overline mb-3">আপনার অর্ডার</div>
-                  <div>
-                    <label className="label">প্যাকেজ</label>
-                    <select
-                      className="input"
-                      value={selectedPkgId || ""}
-                      onChange={(e) => setSelectedPkgId(e.target.value)}
-                      data-testid="order-package-select"
-                    >
-                      {product.packages.map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {p.name} — ৳{p.price}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="mt-3">
-                    <label className="label">পরিমাণ</label>
-                    <div className="flex items-center gap-3">
-                      <button
-                        type="button"
-                        onClick={() => setQty(Math.max(1, qty - 1))}
-                        className="btn-ghost h-10 w-10 p-0"
-                        data-testid="qty-decrease"
-                      >
-                        −
-                      </button>
-                      <div className="font-en font-bold text-xl w-10 text-center" data-testid="qty-value">
-                        {qty}
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setQty(qty + 1)}
-                        className="btn-ghost h-10 w-10 p-0"
-                        data-testid="qty-increase"
-                      >
-                        +
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="mt-5 space-y-2 text-sm font-bn">
-                    <div className="flex justify-between text-zinc-400">
-                      <span>সাবটোটাল</span>
-                      <span className="font-en text-white">
-                        ৳{toBnDigits((selectedPkg?.price ?? 0) * qty)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-zinc-400">
-                      <span>ডেলিভারি চার্জ</span>
-                      <span className="font-en text-white">৳{toBnDigits(deliveryCharge)}</span>
-                    </div>
-                    <div className="border-t border-zinc-800 pt-3 flex justify-between items-center">
-                      <span className="text-zinc-300 font-bold">মোট</span>
-                      <span className="font-en font-black text-2xl text-[#ff5722]" data-testid="order-total">
-                        ৳{toBnDigits(total)}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="btn-primary text-lg"
-                  data-testid="order-submit-button"
-                >
-                  {submitting ? "সাবমিট হচ্ছে..." : "অর্ডার সাবমিট করুন"}
+            {/* Shipping selector */}
+            <div>
+              <label className="label font-bn">Shipping</label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <button type="button" onClick={() => setArea("inside_dhaka")} className={`chip text-left font-bn ${area === "inside_dhaka" ? "active" : ""}`} data-testid="area-inside-dhaka">
+                  ঢাকার ভিতরে: <strong>৳ {toBn(product.delivery_inside_dhaka)}</strong>
                 </button>
-                <p className="text-xs text-zinc-500 text-center font-bn">
-                  পণ্যটি হাতে পেয়ে চেক করে পেমেন্ট করবেন
-                </p>
+                <button type="button" onClick={() => setArea("outside_dhaka")} className={`chip text-left font-bn ${area === "outside_dhaka" ? "active" : ""}`} data-testid="area-outside-dhaka">
+                  ঢাকার বাহিরে: <strong>৳ {toBn(product.delivery_outside_dhaka)}</strong>
+                </button>
               </div>
-            </form>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* How it works */}
-      <section className="py-16 md:py-24 bg-[#080808] border-y border-zinc-900">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Reveal>
-            <div className="text-center max-w-2xl mx-auto mb-12">
-              <div className="overline mb-3">ব্যবহারবিধি</div>
-              <h2 className="section-title text-3xl sm:text-4xl lg:text-5xl font-bn">
-                কিভাবে ব্যবহার করবেন?
-              </h2>
-              <p className="text-zinc-400 mt-3 font-bn text-sm">৩টি সহজ ধাপে</p>
             </div>
-          </Reveal>
-          <div className="grid md:grid-cols-3 gap-5">
-            {HOW.map((s, i) => (
-              <Reveal key={i} delay={i * 100}>
-                <div className="card p-6 h-full relative" data-testid={`how-step-${i}`}>
-                  <div className="absolute top-4 right-5 font-en font-black text-7xl text-[#ff5722]/10">
-                    {i + 1}
+
+            {/* Order summary table */}
+            <div className="border-2 border-[var(--border-strong)] rounded-lg overflow-hidden">
+              <div className="bg-[var(--bg-soft)] px-4 py-2.5 font-bn font-bold border-b-2 border-[var(--border-strong)]">
+                Your order
+              </div>
+              <div className="divide-y-2 divide-[var(--bg-soft)]">
+                <div className="px-4 py-3 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <img src={product.images[0]} alt="" className="w-12 h-12 rounded object-cover flex-shrink-0" />
+                    <div className="min-w-0">
+                      <div className="font-bn text-sm truncate">{selectedPkg?.name}</div>
+                      <div className="text-xs text-[var(--ink-muted)] font-en">× {qty}</div>
+                    </div>
                   </div>
-                  <span className="flex h-12 w-12 items-center justify-center rounded-lg bg-[#ff5722]/10 text-[#ff5722]">
-                    <s.icon size={24} />
-                  </span>
-                  <div className="font-bn font-bold text-xl mt-4">{s.title}</div>
-                  <div className="text-zinc-400 mt-2 font-bn">{s.desc}</div>
+                  <div className="flex items-center gap-2">
+                    <button type="button" onClick={() => setQty(Math.max(1, qty - 1))} className="btn-outline px-2 py-1" data-testid="qty-decrease"><Minus size={14} /></button>
+                    <div className="font-en font-bold w-6 text-center" data-testid="qty-value">{qty}</div>
+                    <button type="button" onClick={() => setQty(qty + 1)} className="btn-outline px-2 py-1" data-testid="qty-increase"><Plus size={14} /></button>
+                  </div>
+                  <div className="font-en font-bold text-right whitespace-nowrap">৳ {toBn((selectedPkg?.price ?? 0) * qty)}</div>
                 </div>
-              </Reveal>
-            ))}
-          </div>
-        </div>
-      </section>
 
-      {/* Reviews */}
-      <section className="py-16 md:py-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Reveal>
-            <div className="text-center max-w-2xl mx-auto mb-12">
-              <div className="overline mb-3">রিভিউ</div>
-              <h2 className="section-title text-3xl sm:text-4xl lg:text-5xl font-bn">
-                গ্রাহকদের মতামত
-              </h2>
-              <div className="flex items-center justify-center gap-1 mt-4">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <STAR key={i} filled={i <= Math.round(product.rating)} />
-                ))}
-                <span className="ml-2 font-en text-zinc-300">
-                  {product.rating}/5 ({toBnDigits(product.review_count)})
-                </span>
-              </div>
-            </div>
-          </Reveal>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
-            {product.reviews.map((r, i) => (
-              <Reveal key={r.id} delay={i * 80}>
-                <div className="card p-6 h-full" data-testid={`review-${i}`}>
-                  <div className="flex gap-1 mb-3">
-                    {[1, 2, 3, 4, 5].map((s) => (
-                      <STAR key={s} filled={s <= r.rating} />
+                {/* Package switcher */}
+                <div className="px-4 py-3">
+                  <label className="label font-bn text-xs">প্যাকেজ পরিবর্তন</label>
+                  <select className="input" value={selectedPkgId || ""} onChange={(e) => setSelectedPkgId(e.target.value)} data-testid="order-package-select">
+                    {product.packages.map((p) => (
+                      <option key={p.id} value={p.id}>{p.name} — ৳{p.price}</option>
                     ))}
-                  </div>
-                  <p className="text-zinc-300 font-bn text-sm leading-relaxed">
-                    {r.text}
-                  </p>
-                  <div className="mt-4 pt-4 border-t border-zinc-800 text-sm">
-                    <div className="font-bn font-semibold text-white">{r.name}</div>
-                    {r.verified && (
-                      <div className="text-xs text-emerald-400 mt-1 flex items-center gap-1 font-bn">
-                        <Check size={12} /> যাচাইকৃত ক্রয়
-                      </div>
-                    )}
-                  </div>
+                  </select>
                 </div>
-              </Reveal>
-            ))}
-          </div>
-        </div>
+
+                <div className="px-4 py-2.5 flex justify-between font-bn text-sm">
+                  <span>Subtotal</span>
+                  <span className="font-en font-bold">৳ {toBn((selectedPkg?.price ?? 0) * qty)}</span>
+                </div>
+                <div className="px-4 py-2.5 flex justify-between font-bn text-sm">
+                  <span>Shipment</span>
+                  <span className="font-en font-bold">৳ {toBn(deliveryCharge)}</span>
+                </div>
+                <div className="px-4 py-3 flex justify-between items-center bg-[var(--bg-soft)]">
+                  <span className="font-bn font-bold text-base">Total</span>
+                  <span className="font-en font-black text-2xl text-[var(--primary)]" data-testid="order-total">৳ {toBn(total)}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* COD note */}
+            <div className="callout-warning text-sm font-bn">
+              💵 <strong>Cash on delivery</strong> — Pay with cash upon delivery. পণ্যটি হাতে নিয়ে চেক করে পেমেন্ট করুন।
+            </div>
+
+            <button type="submit" disabled={submitting} className="btn-cta pulse-cta font-bn text-lg" data-testid="order-submit-button">
+              {submitting ? "সাবমিট হচ্ছে..." : <>অর্ডার প্লেস করুন — ৳ {toBn(total)}</>}
+            </button>
+            <p className="text-center text-xs text-[var(--ink-muted)] font-bn">আপনার পার্সোনাল ডাটা সম্পূর্ণ গোপনীয় থাকবে।</p>
+          </form>
+        </Reveal>
       </section>
 
-      {/* FAQ */}
-      <section className="py-16 md:py-24 bg-[#080808] border-y border-zinc-900">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Reveal>
-            <div className="text-center mb-10">
-              <div className="overline mb-3">প্রশ্নোত্তর</div>
-              <h2 className="section-title text-3xl sm:text-4xl lg:text-5xl font-bn">
-                সাধারণ প্রশ্নোত্তর
-              </h2>
+      {/* ==== Reviews ==== */}
+      <section className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
+        <Reveal>
+          <div className="text-center mb-6">
+            <div className="shop-heading-green text-xl sm:text-2xl font-bn">⭐ গ্রাহকদের মতামত</div>
+            <div className="mt-3 flex items-center justify-center gap-1">
+              {[1, 2, 3, 4, 5].map((i) => <STAR key={i} filled={i <= Math.round(product.rating)} size={18} />)}
+              <span className="ml-2 font-en font-bold">{product.rating}/5 ({toBn(product.review_count)})</span>
             </div>
-          </Reveal>
-          <div className="space-y-3">
+          </div>
+          <div className="grid sm:grid-cols-2 gap-4">
+            {product.reviews.map((r, i) => (
+              <div key={r.id} className="card-white p-5" data-testid={`review-${i}`}>
+                <div className="flex gap-1 mb-2">
+                  {[1, 2, 3, 4, 5].map((s) => <STAR key={s} filled={s <= r.rating} />)}
+                </div>
+                <p className="font-bn text-[var(--ink-soft)] text-sm leading-relaxed">{r.text}</p>
+                <div className="mt-3 pt-3 border-t border-[var(--border)] flex items-center justify-between">
+                  <span className="font-bn font-bold text-sm">{r.name}</span>
+                  {r.verified && <span className="text-xs font-bn text-[var(--green)] inline-flex items-center gap-1"><Check size={12} /> যাচাইকৃত ক্রয়</span>}
+                </div>
+              </div>
+            ))}
+          </div>
+        </Reveal>
+      </section>
+
+      {/* ==== FAQ ==== */}
+      <section className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
+        <Reveal>
+          <div className="text-center mb-6">
+            <div className="shop-heading text-xl sm:text-2xl font-bn">❓ সাধারণ প্রশ্নোত্তর</div>
+          </div>
+          <div className="space-y-2">
             {product.faqs.map((f, i) => (
-              <Reveal key={f.id} delay={i * 50}>
-                <button
-                  className="w-full card p-5 text-left"
-                  onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                  data-testid={`faq-${i}`}
-                >
-                  <div className="flex items-center justify-between gap-4">
-                    <span className="font-bn font-semibold">{f.question}</span>
-                    <ChevronDown
-                      size={20}
-                      className={`text-zinc-400 transition-transform ${
-                        openFaq === i ? "rotate-180" : ""
-                      }`}
-                    />
+              <button
+                key={f.id}
+                type="button"
+                onClick={() => setOpenFaq(openFaq === i ? -1 : i)}
+                className="w-full card-white p-4 text-left"
+                data-testid={`faq-${i}`}
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <span className="font-bn font-bold text-sm sm:text-base">{f.question}</span>
+                  <ChevronDown size={20} className={`flex-shrink-0 text-[var(--primary)] transition-transform ${openFaq === i ? "rotate-180" : ""}`} />
+                </div>
+                {openFaq === i && (
+                  <div className="mt-3 pt-3 border-t border-[var(--border)] text-[var(--ink-soft)] font-bn text-sm leading-relaxed">
+                    {f.answer}
                   </div>
-                  {openFaq === i && (
-                    <div className="mt-3 text-zinc-400 font-bn text-sm leading-relaxed">
-                      {f.answer}
-                    </div>
-                  )}
-                </button>
-              </Reveal>
+                )}
+              </button>
             ))}
           </div>
-        </div>
+        </Reveal>
       </section>
 
-      {/* Final CTA */}
-      <section className="py-16 md:py-24">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <Reveal>
-            <div className="overline mb-3">সীমিত সময়ের অফার</div>
-            <h2 className="section-title text-3xl sm:text-5xl font-bn mb-4">
-              আজই অর্ডার করুন
-            </h2>
-            <p className="text-zinc-400 font-bn mb-2">
-              হাজার হাজার মানুষ ইতিমধ্যে কিনেছেন — আপনার পালা!
-            </p>
-            <p className="font-en text-2xl font-black text-[#ff5722] mb-6">
-              ৳{toBnDigits(product.packages[0]?.price ?? 0)} থেকে
-            </p>
-            <p className="text-xs text-zinc-500 font-bn mb-6">
-              ক্যাশ অন ডেলিভারি • গোপন প্যাকেজিং • ১০০% অরিজিনাল
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center max-w-xl mx-auto">
-              <a href={`tel:${product.phone}`} className="btn-ghost" data-testid="cta-call">
-                <Phone size={18} /> কল করুন
-              </a>
-              <button onClick={scrollToOrder} className="btn-primary" data-testid="cta-order">
-                <ShoppingCart size={18} /> অর্ডার করুন — ৳{toBnDigits(product.packages[0]?.price ?? 0)}
-              </button>
-              <a
-                href={`https://wa.me/${product.whatsapp.replace(/[^0-9]/g, "")}`}
-                target="_blank"
-                rel="noreferrer"
-                className="btn-ghost"
-                data-testid="cta-whatsapp"
-              >
-                <MessageCircle size={18} /> WhatsApp
-              </a>
-            </div>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="border-t border-zinc-900 py-8 text-center text-sm text-zinc-500 font-bn">
-        <div className="max-w-7xl mx-auto px-4">
-          © {new Date().getFullYear()} স্মার্ট পেন নাইফ — সব অধিকার সংরক্ষিত
-          <div className="mt-2 flex items-center justify-center gap-4">
-            <a href={`tel:${product.phone}`} className="hover:text-white">
-              {product.phone}
+      {/* ==== Final CTA ==== */}
+      <section className="max-w-3xl mx-auto px-4 sm:px-6 py-10 text-center">
+        <Reveal>
+          <div className="shop-heading-yellow text-lg sm:text-xl font-bn inline-block">
+            সীমিত সময়ের অফার
+          </div>
+          <h2 className="font-bn text-3xl sm:text-4xl font-extrabold mt-4 mb-2">আজই আত্মবিশ্বাস ফিরে পান!</h2>
+          <p className="font-bn text-[var(--ink-soft)] mb-4">হাজার হাজার পুরুষ ইতিমধ্যে উপকৃত হয়েছেন — আপনার পালা!</p>
+          <p className="font-bn text-base mb-1">এখনই অর্ডার করুন — <span className="font-en font-black text-[var(--primary)]">Starter Pack মাত্র ৳{toBn(product.packages[0].price)}</span></p>
+          <p className="font-bn text-xs text-[var(--ink-muted)] mb-6">ক্যাশ অন ডেলিভারি | গোপন প্যাকেজিং | ১০০% অরিজিনাল</p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-2xl mx-auto">
+            <a href={`tel:${product.phone}`} className="btn-outline" data-testid="cta-call">
+              <Phone size={16} /> 📞 কল
             </a>
-            <span>•</span>
-            <a href={product.facebook} target="_blank" rel="noreferrer" className="hover:text-white inline-flex items-center gap-1">
-              <Facebook size={14} /> Facebook
+            <button onClick={scrollToOrder} className="btn-cta" data-testid="cta-order">
+              <ShoppingCart size={18} /> অর্ডার — ৳{toBn(product.packages[0].price)}
+            </button>
+            <a href={`https://wa.me/${product.whatsapp.replace(/[^0-9]/g, "")}`} target="_blank" rel="noreferrer" className="btn-outline" data-testid="cta-whatsapp">
+              <MessageCircle size={16} /> 💬 WhatsApp
             </a>
           </div>
+        </Reveal>
+      </section>
+
+      {/* ==== Footer ==== */}
+      <footer className="bg-[var(--ink)] text-white/80 mt-6">
+        <div className="max-w-5xl mx-auto px-4 py-8 text-center">
+          <div className="font-bn font-bold text-base sm:text-lg text-white mb-2">
+            বিশ্বাসের আরেক নাম — শতভাগ কোয়ালিটি গ্যারান্টিসহ
+          </div>
+          <p className="font-bn text-sm">যে কোনো প্রয়োজনে কল করুন: <a href={`tel:${product.phone}`} className="text-yellow-300 font-en font-bold">{toBn(product.phone)}</a></p>
+          <p className="font-bn text-xs mt-4 text-white/50">© {new Date().getFullYear()} ম্যাজিক টিস্যু — সব অধিকার সংরক্ষিত</p>
         </div>
       </footer>
 
-      {/* Sticky Mobile Bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-[#0a0a0a]/95 backdrop-blur border-t border-zinc-800 mobile-bar" data-testid="mobile-sticky-bar">
+      {/* ==== Sticky mobile bar ==== */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-white border-t-2 border-[var(--border-strong)] mobile-bar shadow-2xl" data-testid="mobile-sticky-bar">
         <div className="grid grid-cols-3 gap-2 p-2.5">
-          <a href={`tel:${product.phone}`} className="btn-ghost py-2.5 text-xs" data-testid="mobile-call">
-            <Phone size={16} /> কল
+          <a href={`tel:${product.phone}`} className="btn-outline py-2.5 text-xs" data-testid="mobile-call">
+            <Phone size={14} /> কল
           </a>
-          <button onClick={scrollToOrder} className="btn-primary py-2.5 text-xs" data-testid="mobile-order">
-            <ShoppingCart size={16} /> অর্ডার
+          <button onClick={scrollToOrder} className="btn-cta py-2.5 text-xs" data-testid="mobile-order">
+            <ShoppingCart size={14} /> অর্ডার ৳{toBn(total)}
           </button>
-          <a
-            href={`https://wa.me/${product.whatsapp.replace(/[^0-9]/g, "")}`}
-            target="_blank"
-            rel="noreferrer"
-            className="btn-ghost py-2.5 text-xs"
-            data-testid="mobile-whatsapp"
-          >
-            <MessageCircle size={16} /> WhatsApp
+          <a href={`https://wa.me/${product.whatsapp.replace(/[^0-9]/g, "")}`} target="_blank" rel="noreferrer" className="btn-outline py-2.5 text-xs" data-testid="mobile-whatsapp">
+            <MessageCircle size={14} /> WhatsApp
           </a>
         </div>
       </div>
