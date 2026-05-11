@@ -1,0 +1,34 @@
+{
+  "summary": "Iteration 3 — verified expanded admin ProductEditor + all 17+ new landing fields end-to-end. Backend: 20/20 pytest pass (added 2 new tests: GET returns all new fields incl. trust_badges shape, PUT persists banner_text/ticker_text/hero_badge_text/why_use_title/quality_*/customer_count*/urgency_text/final_cta_*/footer_message/site_name/trust_badges/reviews/faqs). Frontend: admin login OK; Product tab renders ProductEditor; Basic Info section open by default with Site Name + Product Title (H1) fields visible; collapsible sections toggle open/close; save-product + save-product-bottom both present; add-trust-badge, add-review, add-faq buttons functional; updated Top Banner Text to 'TEST BANNER E2E', clicked Save All Changes → success toast 'সব পরিবর্তন সংরক্ষিত হয়েছে' shown; reloaded landing → top-banner reflects new text; banner restored after test.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Admin Dashboard", "issues": ["Recharts dev warning: 'width(-1) and height(-1) of chart should be greater than 0' — chart container height not set on first render; cosmetic, chart still renders after layout. Consider giving ResponsiveContainer an explicit minHeight."]},
+      {"screen": "Admin ProductEditor & Landing (order package <select>)", "issues": ["React hydration warning: '<span> cannot be a child of <option>'. Source is the Emergent dev-time editor wrapper injecting <span data-ve-dynamic> inside <option> for ProductEditor.jsx:443 (Review rating select) and Landing.jsx:389 (package select). Pure dev-overlay artifact; no impact on production build, but adds console noise."]}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/backend_test.py", "/app/test_reports/pytest/pytest_results.xml"],
+  "action_items": [
+    "Optional: add minHeight to dashboard ResponsiveContainer to silence recharts width/height warning.",
+    "Optional: cleanup seed product — 1 extra trust badge ('নতুন badge'), 1 extra review ('নাম'/'রিভিউ লিখুন...') and 1 extra FAQ ('নতুন প্রশ্ন?') were added during E2E test and left in DB. Either delete them via admin or call default reseed."
+  ],
+  "critical_code_review_comments": [
+    "server.py still uses deprecated @app.on_event() — migrate to FastAPI lifespan handler.",
+    "ProductUpdate cannot clear nullable fields (server strips None before $set). If admin needs to clear offer_end_iso or any optional copy, current code blocks it. Consider using exclude_unset only, and using PATCH semantics or a sentinel.",
+    "ProductEditor.jsx (~530 lines) is large but well-structured. Section/Field/TextArea are good. Consider extracting Packages/Reviews/FAQs/TrustBadges editors into separate files for testability.",
+    "Trust badge color buttons use dynamic Tailwind classes (`bg-${c}-500/20 text-${c}-400`) — these are dynamic strings and may be purged by Tailwind JIT in production unless safelisted. Add a `safelist` for blue/green/purple/orange/red/yellow x {500/20, 400} or use a static map (same pattern as Landing.jsx COLOR_CLASSES).",
+    "ProductEditor handleSave sends ALL fields including unchanged ones; harmless but a partial PATCH would be more idempotent.",
+    "Reviews rating <select> uses ★ glyph in option label — that's fine, but Emergent dev-overlay injects a <span> inside <option> causing hydration warnings (cosmetic).",
+    "AdminDashboard & AdminLogin still use the old dark theme while public Landing is the colorful light nooranishop theme (carry-over note from iter 2)."
+  ],
+  "updated_files": ["/app/backend/tests/backend_test.py"],
+  "success_rate": {"backend": "100% (20/20)", "frontend": "100% of tested admin editor + landing reflect flow"},
+  "test_credentials": "Admin password: admin123 (from /app/memory/test_credentials.md).",
+  "seed_data_creation": "DB ends with 1 extra trust_badge (label 'নতুন badge'), 1 extra review (name 'নাম'), 1 extra FAQ (question 'নতুন প্রশ্ন?') added via admin UI Add buttons during E2E. Banner text was restored to original. No orders created in this iteration. Main agent may want to reseed product if pristine state needed.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Backend covers all new admin-editable fields. Added 2 tests in /app/backend/tests/backend_test.py: TestProduct::test_get_product_has_new_fields and TestProduct::test_update_all_new_fields_persists. Frontend admin Product tab uses ProductEditor.jsx with collapsible Sections — Basic Info open by default, others closed. Section toggling works via header buttons. Testids: save-product, save-product-bottom, add-package, add-image, add-feature, add-review, add-faq, add-trust-badge. Save toast text exact: 'সব পরিবর্তন সংরক্ষিত হয়েছে'. Landing renders banner_text in [data-testid=\"top-banner\"], hero_badge_text above hero-title, trust_badges in [data-testid=\"trust-{i}\"] using ICONS map (ShieldCheck/Award/Lock/Truck/Package/Heart/Zap/Gift/Clock/Phone) + COLOR_CLASSES (blue/green/purple/orange/red/yellow). Trust badge admin color picker uses dynamic Tailwind classes that may need safelist in production.",
+  "rca of the issue": "N/A — no functional failures."
+}

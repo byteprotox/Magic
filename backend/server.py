@@ -51,6 +51,13 @@ class FAQItem(BaseModel):
     answer: str
 
 
+class TrustBadge(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    label: str
+    icon: str = "ShieldCheck"  # lucide-react icon name
+    color: str = "blue"  # blue | green | purple | orange | red | yellow
+
+
 class Product(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str = Field(default="main")
@@ -71,6 +78,23 @@ class Product(BaseModel):
     reviews: List[Review] = []
     faqs: List[FAQItem] = []
     offer_end_iso: Optional[str] = None
+    # Configurable copy / sections
+    banner_text: str = "অফার সীমিত সময়ের জন্য! আজই অর্ডার করুন — ক্যাশ অন ডেলিভারি"
+    ticker_text: str = "🔥 আজকের স্পেশাল অফার ✦ গোপন প্যাকেজিং ✦ ক্যাশ অন ডেলিভারি ✦ ২৪-৭২ ঘণ্টায় ডেলিভারি"
+    hero_badge_text: str = "⭐ অরিজিনাল প্রোডাক্ট • ১০০% কার্যকর"
+    why_use_title: str = "✨ কেন ব্যবহার করবেন?"
+    quality_title: str = "দামে নয়—আপনি ফোকাস করুন কোয়ালিটিতে"
+    quality_message: str = "এখনো ভাবছেন কিনবেন কিনা? প্রথমবার আপনার মত চিন্তা করেছিল।"
+    customer_count: int = 10000
+    customer_count_label: str = "মানুষ এখন খুশি!"
+    urgency_text: str = "নকল কিনে পরে আফসোস নয়—শুরুতেই অরিজিনাল কোয়ালিটি নিন।"
+    final_cta_eyebrow: str = "সীমিত সময়ের অফার"
+    final_cta_title: str = "আজই অর্ডার করুন!"
+    final_cta_subtitle: str = "হাজার হাজার মানুষ ইতিমধ্যে উপকৃত হয়েছেন — আপনার পালা!"
+    final_cta_note: str = "ক্যাশ অন ডেলিভারি | গোপন প্যাকেজিং | ১০০% অরিজিনাল"
+    footer_message: str = "বিশ্বাসের আরেক নাম — শতভাগ কোয়ালিটি গ্যারান্টিসহ"
+    site_name: str = "ম্যাজিক টিস্যু"
+    trust_badges: List[TrustBadge] = []
     updated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
 
@@ -92,6 +116,22 @@ class ProductUpdate(BaseModel):
     reviews: Optional[List[Review]] = None
     faqs: Optional[List[FAQItem]] = None
     offer_end_iso: Optional[str] = None
+    banner_text: Optional[str] = None
+    ticker_text: Optional[str] = None
+    hero_badge_text: Optional[str] = None
+    why_use_title: Optional[str] = None
+    quality_title: Optional[str] = None
+    quality_message: Optional[str] = None
+    customer_count: Optional[int] = None
+    customer_count_label: Optional[str] = None
+    urgency_text: Optional[str] = None
+    final_cta_eyebrow: Optional[str] = None
+    final_cta_title: Optional[str] = None
+    final_cta_subtitle: Optional[str] = None
+    final_cta_note: Optional[str] = None
+    footer_message: Optional[str] = None
+    site_name: Optional[str] = None
+    trust_badges: Optional[List[TrustBadge]] = None
 
 
 class OrderCreate(BaseModel):
@@ -194,6 +234,27 @@ def default_product() -> dict:
             FAQItem(question="অর্ডার কিভাবে করব?", answer="এই পেইজের অর্ডার ফর্মে নাম, ফোন নম্বর ও ঠিকানা দিয়ে সাবমিট করুন। আমরা শীঘ্রই কনফার্ম কল করব।"),
         ],
         offer_end_iso=(datetime.now(timezone.utc) + timedelta(hours=6)).isoformat(),
+        banner_text="অফার সীমিত সময়ের জন্য! আজই অর্ডার করুন — ক্যাশ অন ডেলিভারি",
+        ticker_text="🔥 আজকের স্পেশাল অফার — Starter Pack মাত্র ৳৪৯০ ✦ গোপন প্যাকেজিং ✦ ক্যাশ অন ডেলিভারি ✦ জার্মান ল্যাব টেস্টেড ✦ সাইড ইফেক্ট মুক্ত ✦ ২৪-৭২ ঘণ্টায় ডেলিভারি ✦",
+        hero_badge_text="⭐ অরিজিনাল জার্মান প্রোডাক্ট • ১০০% কার্যকর",
+        why_use_title="✨ কেন ব্যবহার করবেন?",
+        quality_title="দামে নয়—আপনি ফোকাস করুন কোয়ালিটিতে",
+        quality_message="এখনো ভাবছেন কিনবেন কিনা? প্রথমবার আপনার মত চিন্তা করেছিল।",
+        customer_count=10000,
+        customer_count_label="মানুষ এখন খুশি!",
+        urgency_text="নকল কিনে পরে আফসোস নয়—শুরুতেই অরিজিনাল কোয়ালিটি নিন।",
+        final_cta_eyebrow="সীমিত সময়ের অফার",
+        final_cta_title="আজই আত্মবিশ্বাস ফিরে পান!",
+        final_cta_subtitle="হাজার হাজার পুরুষ ইতিমধ্যে উপকৃত হয়েছেন — আপনার পালা!",
+        final_cta_note="ক্যাশ অন ডেলিভারি | গোপন প্যাকেজিং | ১০০% অরিজিনাল",
+        footer_message="বিশ্বাসের আরেক নাম — শতভাগ কোয়ালিটি গ্যারান্টিসহ",
+        site_name="ম্যাজিক টিস্যু",
+        trust_badges=[
+            TrustBadge(label="জার্মান ল্যাব টেস্টেড", icon="Award", color="blue"),
+            TrustBadge(label="সাইড ইফেক্ট মুক্ত", icon="ShieldCheck", color="green"),
+            TrustBadge(label="গোপন প্যাকেজিং", icon="Lock", color="purple"),
+            TrustBadge(label="ক্যাশ অন ডেলিভারি", icon="Truck", color="orange"),
+        ],
     )
     return p.model_dump()
 
@@ -228,6 +289,8 @@ async def update_product(update: ProductUpdate, _: bool = Depends(require_admin)
         payload["reviews"] = [r if isinstance(r, dict) else r.model_dump() for r in payload["reviews"]]
     if "faqs" in payload:
         payload["faqs"] = [f if isinstance(f, dict) else f.model_dump() for f in payload["faqs"]]
+    if "trust_badges" in payload:
+        payload["trust_badges"] = [t if isinstance(t, dict) else t.model_dump() for t in payload["trust_badges"]]
     payload["updated_at"] = datetime.now(timezone.utc).isoformat()
     await db.products.update_one({"id": "main"}, {"$set": payload})
     doc = await db.products.find_one({"id": "main"}, {"_id": 0})

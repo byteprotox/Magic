@@ -55,6 +55,70 @@ class TestProduct:
         # restore
         requests.put(f"{API}/product", json={"title": orig["title"]}, headers=auth_headers, timeout=15)
 
+    def test_get_product_has_new_fields(self):
+        r = requests.get(f"{API}/product", timeout=15)
+        assert r.status_code == 200
+        d = r.json()
+        for k in ["banner_text", "ticker_text", "hero_badge_text", "why_use_title",
+                  "quality_title", "quality_message", "customer_count", "customer_count_label",
+                  "urgency_text", "final_cta_eyebrow", "final_cta_title", "final_cta_subtitle",
+                  "final_cta_note", "footer_message", "site_name", "trust_badges"]:
+            assert k in d, f"missing new field {k}"
+        assert isinstance(d["trust_badges"], list)
+        assert len(d["trust_badges"]) >= 1
+        b = d["trust_badges"][0]
+        for k in ["id", "label", "icon", "color"]:
+            assert k in b
+        assert isinstance(d["customer_count"], int)
+
+    def test_update_all_new_fields_persists(self, auth_headers):
+        orig = requests.get(f"{API}/product", timeout=15).json()
+        payload = {
+            "banner_text": "TEST BANNER",
+            "ticker_text": "TEST TICKER",
+            "hero_badge_text": "TEST BADGE",
+            "why_use_title": "TEST WHY",
+            "quality_title": "TEST QT",
+            "quality_message": "TEST QM",
+            "customer_count": 12345,
+            "customer_count_label": "TEST CCL",
+            "urgency_text": "TEST URG",
+            "final_cta_eyebrow": "TEST EB",
+            "final_cta_title": "TEST FCT",
+            "final_cta_subtitle": "TEST FCS",
+            "final_cta_note": "TEST FCN",
+            "footer_message": "TEST FM",
+            "site_name": "TEST SITE",
+            "trust_badges": [
+                {"id": "tb1", "label": "TEST B1", "icon": "Award", "color": "green"},
+                {"id": "tb2", "label": "TEST B2", "icon": "Lock", "color": "purple"},
+            ],
+            "reviews": [
+                {"id": "rv1", "name": "TEST Reviewer", "rating": 4, "text": "TEST REV", "verified": False},
+            ],
+            "faqs": [
+                {"id": "fq1", "question": "TEST Q?", "answer": "TEST A"},
+            ],
+        }
+        r = requests.put(f"{API}/product", json=payload, headers=auth_headers, timeout=15)
+        assert r.status_code == 200, r.text
+        g = requests.get(f"{API}/product", timeout=15).json()
+        for k, v in payload.items():
+            if k in ("trust_badges", "reviews", "faqs"):
+                assert len(g[k]) == len(v)
+            else:
+                assert g[k] == v, f"{k} mismatch: {g[k]!r} != {v!r}"
+        # verify reviewer fields persisted
+        assert g["reviews"][0]["name"] == "TEST Reviewer"
+        assert g["reviews"][0]["rating"] == 4
+        assert g["reviews"][0]["verified"] is False
+        assert g["faqs"][0]["question"] == "TEST Q?"
+        assert g["trust_badges"][0]["icon"] == "Award"
+        assert g["trust_badges"][1]["color"] == "purple"
+        # restore relevant fields
+        restore = {k: orig.get(k) for k in payload.keys()}
+        requests.put(f"{API}/product", json=restore, headers=auth_headers, timeout=15)
+
 
 # ---------- Admin Auth ----------
 class TestAdminAuth:

@@ -15,7 +15,35 @@ import {
   Lock,
   Award,
   Facebook,
+  Package as PackageIcon,
+  Heart,
+  Zap,
+  Gift,
+  Clock,
+  Phone as PhoneIcon,
 } from "lucide-react";
+
+const ICONS = {
+  ShieldCheck,
+  Award,
+  Lock,
+  Truck,
+  Package: PackageIcon,
+  Heart,
+  Zap,
+  Gift,
+  Clock,
+  Phone: PhoneIcon,
+};
+
+const COLOR_CLASSES = {
+  blue: "bg-blue-50 text-blue-700 border-blue-200",
+  green: "bg-green-50 text-green-700 border-green-200",
+  purple: "bg-purple-50 text-purple-700 border-purple-200",
+  orange: "bg-orange-50 text-orange-700 border-orange-200",
+  red: "bg-red-50 text-red-700 border-red-200",
+  yellow: "bg-yellow-50 text-yellow-700 border-yellow-200",
+};
 import Countdown from "../components/Countdown";
 import Reveal from "../components/Reveal";
 import { getProduct, createOrder } from "../lib/api";
@@ -111,14 +139,14 @@ export default function Landing() {
       {/* ==== Top urgency banner ==== */}
       <div className="bg-[var(--primary)] text-white text-center py-2 px-3 text-sm font-bold flex items-center justify-center gap-3 flex-wrap" data-testid="top-banner">
         <Sparkles size={14} />
-        <span className="font-bn">অফার সীমিত সময়ের জন্য! আজই অর্ডার করুন — ক্যাশ অন ডেলিভারি</span>
+        <span className="font-bn">{product.banner_text}</span>
         {product.offer_end_iso && <Countdown endIso={product.offer_end_iso} />}
       </div>
 
       {/* ==== Marquee ticker ==== */}
       <div className="bg-yellow-300 border-y-2 border-yellow-500 py-1.5 ticker-wrap text-sm font-bn font-bold text-[#7c2d12]">
         <div className="ticker">
-          🔥 আজকের স্পেশাল অফার — Starter Pack মাত্র ৳৪৯০ ✦ গোপন প্যাকেজিং ✦ ক্যাশ অন ডেলিভারি ✦ জার্মান ল্যাব টেস্টেড ✦ সাইড ইফেক্ট মুক্ত ✦ ২৪-৭২ ঘণ্টায় ডেলিভারি ✦
+          {product.ticker_text}
         </div>
       </div>
 
@@ -127,7 +155,7 @@ export default function Landing() {
         <Reveal>
           <div className="text-center">
             <div className="inline-block bg-yellow-300 border-2 border-yellow-500 px-3 py-1 rounded-md text-xs font-bn font-bold text-[#7c2d12] mb-3">
-              ⭐ অরিজিনাল জার্মান প্রোডাক্ট • ১০০% কার্যকর
+              {product.hero_badge_text}
             </div>
             <h1 className="font-bn text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight" data-testid="hero-title">
               {product.title}
@@ -160,7 +188,7 @@ export default function Landing() {
         {/* Urgent callout */}
         <Reveal>
           <div className="mt-8 callout-danger text-center text-base sm:text-lg font-bn">
-            ⚠️ নকল কিনে পরে আফসোস নয়—শুরুতেই অরিজিনাল কোয়ালিটি নিন।
+            ⚠️ {product.urgency_text}
             <div className="mt-2 text-sm font-semibold">এখন অর্ডার করলে পাচ্ছেন <span className="text-[var(--primary)]">বিশাল ছাড়।</span></div>
           </div>
         </Reveal>
@@ -192,7 +220,7 @@ export default function Landing() {
         <Reveal>
           <div className="text-center mb-6">
             <div className="shop-heading text-2xl sm:text-3xl font-bn">
-              ✨ কেন ব্যবহার করবেন?
+              {product.why_use_title}
             </div>
           </div>
           <div className="card-white p-6 sm:p-8">
@@ -211,17 +239,16 @@ export default function Landing() {
       {/* ==== Trust badges ==== */}
       <section className="max-w-5xl mx-auto px-4 sm:px-6 py-6">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {[
-            { icon: Award, label: "জার্মান ল্যাব টেস্টেড", color: "bg-blue-50 text-blue-700 border-blue-200" },
-            { icon: ShieldCheck, label: "সাইড ইফেক্ট মুক্ত", color: "bg-green-50 text-green-700 border-green-200" },
-            { icon: Lock, label: "গোপন প্যাকেজিং", color: "bg-purple-50 text-purple-700 border-purple-200" },
-            { icon: Truck, label: "ক্যাশ অন ডেলিভারি", color: "bg-orange-50 text-orange-700 border-orange-200" },
-          ].map((b, i) => (
-            <div key={i} className={`border-2 rounded-lg p-4 text-center ${b.color}`} data-testid={`trust-${i}`}>
-              <b.icon size={28} className="mx-auto mb-2" />
-              <div className="text-sm font-bn font-bold">{b.label}</div>
-            </div>
-          ))}
+          {(product.trust_badges || []).map((b, i) => {
+            const Icon = ICONS[b.icon] || ShieldCheck;
+            const color = COLOR_CLASSES[b.color] || COLOR_CLASSES.blue;
+            return (
+              <div key={b.id || i} className={`border-2 rounded-lg p-4 text-center ${color}`} data-testid={`trust-${i}`}>
+                <Icon size={28} className="mx-auto mb-2" />
+                <div className="text-sm font-bn font-bold">{b.label}</div>
+              </div>
+            );
+          })}
         </div>
       </section>
 
@@ -230,16 +257,16 @@ export default function Landing() {
         <Reveal>
           <div className="text-center mb-3">
             <div className="shop-heading-yellow inline-block text-xl sm:text-2xl font-bn">
-              দামে নয়—আপনি ফোকাস করুন কোয়ালিটিতে
+              {product.quality_title}
             </div>
           </div>
           <div className="card-white p-6 text-center font-bn text-[var(--ink-soft)]">
-            <p className="text-base sm:text-lg">এখনো ভাবছেন কিনবেন কিনা? <strong className="text-[var(--primary)]">{toBn(10000)}+ পরিবারও</strong> প্রথমবার আপনার মত চিন্তা করেছিল।</p>
+            <p className="text-base sm:text-lg">{product.quality_message}</p>
             <p className="mt-2 text-sm">আমাদের প্রোডাক্ট কিনে তারা এখন খুশি!</p>
             <div className="mt-4 font-en font-black text-4xl sm:text-5xl text-[var(--green)]">
-              {toBn(10000)}+
+              {toBn(product.customer_count)}+
             </div>
-            <div className="text-sm font-bn font-bold mt-1">মানুষ এখন খুশি!</div>
+            <div className="text-sm font-bn font-bold mt-1">{product.customer_count_label}</div>
             <div className="mt-5 pt-5 border-t-2 border-dashed border-[var(--border-strong)]">
               <p className="font-bn text-sm">যে কোনো প্রয়োজনে কল করুন</p>
               <a href={`tel:${product.phone}`} className="font-en font-black text-2xl text-[var(--primary)] mt-1 inline-block" data-testid="phone-link">
@@ -453,12 +480,12 @@ export default function Landing() {
       <section className="max-w-3xl mx-auto px-4 sm:px-6 py-10 text-center">
         <Reveal>
           <div className="shop-heading-yellow text-lg sm:text-xl font-bn inline-block">
-            সীমিত সময়ের অফার
+            {product.final_cta_eyebrow}
           </div>
-          <h2 className="font-bn text-3xl sm:text-4xl font-extrabold mt-4 mb-2">আজই আত্মবিশ্বাস ফিরে পান!</h2>
-          <p className="font-bn text-[var(--ink-soft)] mb-4">হাজার হাজার পুরুষ ইতিমধ্যে উপকৃত হয়েছেন — আপনার পালা!</p>
-          <p className="font-bn text-base mb-1">এখনই অর্ডার করুন — <span className="font-en font-black text-[var(--primary)]">Starter Pack মাত্র ৳{toBn(product.packages[0].price)}</span></p>
-          <p className="font-bn text-xs text-[var(--ink-muted)] mb-6">ক্যাশ অন ডেলিভারি | গোপন প্যাকেজিং | ১০০% অরিজিনাল</p>
+          <h2 className="font-bn text-3xl sm:text-4xl font-extrabold mt-4 mb-2">{product.final_cta_title}</h2>
+          <p className="font-bn text-[var(--ink-soft)] mb-4">{product.final_cta_subtitle}</p>
+          <p className="font-bn text-base mb-1">এখনই অর্ডার করুন — <span className="font-en font-black text-[var(--primary)]">{product.packages[0]?.name} মাত্র ৳{toBn(product.packages[0]?.price ?? 0)}</span></p>
+          <p className="font-bn text-xs text-[var(--ink-muted)] mb-6">{product.final_cta_note}</p>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-3xl mx-auto">
             <a href={`tel:${product.phone}`} className="btn-outline" data-testid="cta-call">
               <Phone size={16} /> 📞 কল
@@ -480,7 +507,7 @@ export default function Landing() {
       <footer className="bg-[var(--ink)] text-white/80 mt-6">
         <div className="max-w-5xl mx-auto px-4 py-8 text-center">
           <div className="font-bn font-bold text-base sm:text-lg text-white mb-2">
-            বিশ্বাসের আরেক নাম — শতভাগ কোয়ালিটি গ্যারান্টিসহ
+            {product.footer_message}
           </div>
           <p className="font-bn text-sm">যে কোনো প্রয়োজনে কল করুন: <a href={`tel:${product.phone}`} className="text-yellow-300 font-en font-bold">{toBn(product.phone)}</a></p>
           <div className="mt-3 flex items-center justify-center gap-3 flex-wrap">
@@ -492,7 +519,7 @@ export default function Landing() {
               <MessageCircle size={16} /> WhatsApp
             </a>
           </div>
-          <p className="font-bn text-xs mt-4 text-white/50">© {new Date().getFullYear()} ম্যাজিক টিস্যু — সব অধিকার সংরক্ষিত</p>
+          <p className="font-bn text-xs mt-4 text-white/50">© {new Date().getFullYear()} {product.site_name} — সব অধিকার সংরক্ষিত</p>
         </div>
       </footer>
 
