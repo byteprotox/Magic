@@ -77,6 +77,8 @@ agenthub/agents/youtube/db
 .cache/
 
 memory/test_credentials.md
+backend/secrets/
+secrets/
 
 # Mobile development
 android-sdk/frontend/node_modules/.cache/default-development/5.pack

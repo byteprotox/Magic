@@ -5,7 +5,7 @@ import requests
 
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "http://localhost:8001").rstrip("/")
 API = f"{BASE_URL}/api"
-ADMIN_PASSWORD = "admin123"
+ADMIN_PASSWORD = "69ML@MT"
 
 
 @pytest.fixture(scope="session")
