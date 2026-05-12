@@ -1,7 +1,7 @@
 // Firebase-backed API layer for Magic Tissue.
 //
 // In production (Firebase Spark / no-billing), the frontend talks directly
-// to Firestore, Firebase Storage, and Firebase Auth — no Cloud Run / FastAPI
+// to Firestore and Firebase Auth — no Cloud Run / FastAPI
 // server is required. The exported function names and return shapes mirror
 // the legacy REST API so the rest of the React app is unchanged.
 
@@ -17,20 +17,18 @@ import {
   setDoc,
   updateDoc,
 } from "firebase/firestore";
-import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import {
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
 } from "firebase/auth";
 
-import { auth, db, storage } from "./firebase";
+import { auth, db } from "./firebase";
 import {
   ADMIN_EMAIL,
   ORDERS_COLLECTION,
   PRODUCTS_COLLECTION,
   PRODUCT_DOC_ID,
-  PRODUCT_IMAGES_PREFIX,
   isAdminEmail,
 } from "./config";
 import { mergeWithDefault } from "./defaultProduct";
@@ -98,37 +96,6 @@ export async function updateProduct(payload) {
   // and so the document is created on first save.
   await setDoc(productRef(), data, { merge: true });
   return getProduct();
-}
-
-// -------- Storage --------
-export async function uploadImage(file) {
-  if (!file) {
-    const err = new Error("No file selected");
-    err.response = { data: { detail: "No file selected" } };
-    throw err;
-  }
-  if (!file.type || !file.type.startsWith("image/")) {
-    const err = new Error("Only image uploads are allowed");
-    err.response = { data: { detail: "Only image uploads are allowed" } };
-    throw err;
-  }
-  if (file.size > 5 * 1024 * 1024) {
-    const err = new Error("Image must be 5MB or smaller");
-    err.response = { data: { detail: "Image must be 5MB or smaller" } };
-    throw err;
-  }
-
-  const extMatch = (file.name || "").match(/\.[A-Za-z0-9]+$/);
-  const ext = extMatch ? extMatch[0].toLowerCase() : ".jpg";
-  const path = `${PRODUCT_IMAGES_PREFIX}/${uuid()}${ext}`;
-  const objectRef = ref(storage, path);
-
-  await uploadBytes(objectRef, file, {
-    contentType: file.type || "image/jpeg",
-    cacheControl: "public,max-age=31536000,immutable",
-  });
-  const url = await getDownloadURL(objectRef);
-  return { url, path };
 }
 
 // -------- Orders --------

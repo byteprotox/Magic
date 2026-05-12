@@ -19,7 +19,7 @@ import {
   Type,
   ListChecks,
 } from "lucide-react";
-import { updateProduct, uploadImage } from "../../lib/api";
+import { updateProduct } from "../../lib/api";
 
 const ICON_OPTIONS = [
   "ShieldCheck",
@@ -169,7 +169,6 @@ export default function ProductEditor({ product, onChange }) {
   const [faqs, setFaqs] = useState([...(product.faqs || [])]);
   const [trustBadges, setTrustBadges] = useState([...(product.trust_badges || [])]);
   const [saving, setSaving] = useState(false);
-  const [uploadingImage, setUploadingImage] = useState(false);
 
   const setF = (key, value) => setForm((f) => ({ ...f, [key]: value }));
 
@@ -205,25 +204,6 @@ export default function ProductEditor({ product, onChange }) {
       );
     } finally {
       setSaving(false);
-    }
-  };
-
-  const handleImageUpload = async (event) => {
-    const file = event.target.files?.[0];
-    event.target.value = "";
-    if (!file) return;
-    setUploadingImage(true);
-    try {
-      const uploaded = await uploadImage(file);
-      setImages((current) => [...current, uploaded.url]);
-      toast.success("ছবি আপলোড হয়েছে");
-    } catch (err) {
-      console.error("image upload failed", err);
-      toast.error(
-        err?.response?.data?.detail || err?.message || "ছবি আপলোড করতে সমস্যা হয়েছে"
-      );
-    } finally {
-      setUploadingImage(false);
     }
   };
 
@@ -375,15 +355,9 @@ export default function ProductEditor({ product, onChange }) {
               />
             </div>
           ))}
-          <div className="flex flex-wrap gap-2">
-            <label className={`btn-ghost cursor-pointer ${uploadingImage ? "opacity-60 pointer-events-none" : ""}`}>
-              <ImageIcon size={14} /> {uploadingImage ? "Uploading..." : "Upload Image"}
-              <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" data-testid="upload-image" />
-            </label>
-            <button type="button" onClick={() => setImages([...images, ""])} className="btn-ghost" data-testid="add-image">
-              <Plus size={14} /> Add Image URL
-            </button>
-          </div>
+          <button type="button" onClick={() => setImages([...images, ""])} className="btn-ghost" data-testid="add-image">
+            <Plus size={14} /> Add Image URL
+          </button>
         </div>
       </Section>
 
