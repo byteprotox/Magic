@@ -48,6 +48,7 @@ import Countdown from "../components/Countdown";
 import Reveal from "../components/Reveal";
 import { getProduct, createOrder } from "../lib/api";
 import { useFacebookPixel, fbqTrack } from "../lib/fbPixel";
+import { initFirebaseAnalytics, logEvent as gaLog } from "../lib/firebase";
 
 const toBn = (val) => {
   const map = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
@@ -72,6 +73,19 @@ export default function Landing() {
 
   // Initialize Facebook Pixel once product loads
   useFacebookPixel(product?.fb_pixel_id);
+
+  // Initialize Firebase Analytics (Google Analytics 4) and log page_view
+  useEffect(() => {
+    if (!product) return;
+    initFirebaseAnalytics().then((a) => {
+      if (a) {
+        gaLog("page_view", {
+          page_title: product.title,
+          page_location: window.location.href,
+        });
+      }
+    });
+  }, [product]);
 
   useEffect(() => {
     getProduct()
@@ -98,13 +112,19 @@ export default function Landing() {
 
   const scrollToOrder = () => {
     document.getElementById("order-form")?.scrollIntoView({ behavior: "smooth" });
-    // Track ad funnel event
+    // Track ad funnel event — FB Pixel
     fbqTrack("InitiateCheckout", {
       content_name: product?.title,
       content_ids: selectedPkg ? [selectedPkg.id] : [],
       value: total,
       currency: "BDT",
       num_items: qty,
+    });
+    // Track ad funnel event — Firebase / GA4
+    gaLog("begin_checkout", {
+      currency: "BDT",
+      value: total,
+      items: selectedPkg ? [{ item_id: selectedPkg.id, item_name: selectedPkg.name, price: selectedPkg.price, quantity: qty }] : [],
     });
   };
 
@@ -137,6 +157,20 @@ export default function Landing() {
         currency: "BDT",
         num_items: qty,
         order_id: created?.id,
+      });
+      // Fire Firebase / GA4 purchase event
+      gaLog("purchase", {
+        transaction_id: created?.id,
+        currency: "BDT",
+        value: total,
+        items: [
+          {
+            item_id: selectedPkg.id,
+            item_name: selectedPkg.name,
+            price: selectedPkg.price,
+            quantity: qty,
+          },
+        ],
       });
       toast.success("অর্ডার সফল হয়েছে! আমরা শীঘ্রই কল করব।");
       setForm({ name: "", phone: "", address: "", note: "" });
