@@ -14,6 +14,8 @@ import {
 import { toast } from "sonner";
 import {
   adminVerify,
+  adminLogout,
+  onAdminAuthState,
   getStats,
   listOrders,
   updateOrderStatus,
@@ -47,6 +49,16 @@ const STATUS_COLOR = {
   cancelled: "bg-red-500/10 text-red-400 border-red-500/30",
 };
 
+function isAuthError(err) {
+  const code = err?.code || "";
+  return (
+    code === "auth/not-authenticated" ||
+    code === "auth/not-admin" ||
+    code === "permission-denied" ||
+    code === "unauthenticated"
+  );
+}
+
 export default function AdminDashboard() {
   const [tab, setTab] = useState("dashboard");
   const [stats, setStats] = useState(null);
@@ -55,8 +67,15 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  const logout = () => {
-    localStorage.removeItem("admin_token");
+  const logout = async () => {
+    try {
+      await adminLogout();
+    } catch (_) {
+      // ignore
+    }
+    try {
+      localStorage.removeItem("admin_token");
+    } catch (_) {}
     navigate("/admin/login");
   };
 
@@ -67,30 +86,41 @@ export default function AdminDashboard() {
       setOrders(o);
       setProduct(p);
     } catch (err) {
-      if (err?.response?.status === 401) {
+      if (isAuthError(err)) {
         logout();
       } else {
+        console.error("admin refresh failed", err);
         toast.error("ডেটা লোড করতে সমস্যা হয়েছে");
       }
     }
   };
 
   useEffect(() => {
+    let cancelled = false;
     (async () => {
-      const token = localStorage.getItem("admin_token");
-      if (!token) {
-        navigate("/admin/login");
-        return;
-      }
       try {
         await adminVerify();
+        if (cancelled) return;
         await refresh();
-      } catch {
-        logout();
+      } catch (err) {
+        if (!cancelled) {
+          navigate("/admin/login", { replace: true });
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     })();
+    // Reactively log the user out if Firebase Auth state changes (e.g.
+    // password reset on another tab, token revocation, etc.).
+    const unsub = onAdminAuthState((user) => {
+      if (!user) {
+        navigate("/admin/login", { replace: true });
+      }
+    });
+    return () => {
+      cancelled = true;
+      unsub();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

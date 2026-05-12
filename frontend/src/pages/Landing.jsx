@@ -176,7 +176,10 @@ export default function Landing() {
       setForm({ name: "", phone: "", address: "", note: "" });
       setQty(1);
     } catch (err) {
-      toast.error(err?.response?.data?.detail || "অর্ডার সাবমিট করতে সমস্যা হয়েছে");
+      console.error("create order failed", err);
+      toast.error(
+        err?.response?.data?.detail || err?.message || "অর্ডার সাবমিট করতে সমস্যা হয়েছে"
+      );
     } finally {
       setSubmitting(false);
     }

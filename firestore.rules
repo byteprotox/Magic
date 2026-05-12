@@ -1,0 +1,68 @@
+rules_version = '2';
+
+// Firestore security rules for Magic Tissue (Firebase Spark/no-billing deploy).
+//
+// Collections:
+//   products/main  — public read; admin write. Other product docs are admin-only.
+//   orders/{id}    — public create with validation; admin read/update/delete.
+//
+// Admin is identified by Firebase Auth email. Keep ADMIN_EMAIL in sync with
+// frontend/src/lib/config.js (ADMIN_EMAIL constant).
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function adminEmail() {
+      return "arnosbolti@gmail.com";
+    }
+
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.email != null
+        && request.auth.token.email.lower() == adminEmail();
+    }
+
+    function isValidNewOrder(d) {
+      return d.keys().hasAll([
+            'id', 'phone', 'address', 'package_id', 'package_name',
+            'package_price', 'quantity', 'delivery_area',
+            'delivery_charge', 'total', 'status', 'created_at'
+          ])
+        && d.id is string && d.id.size() >= 4 && d.id.size() <= 128
+        && d.phone is string && d.phone.size() >= 6 && d.phone.size() <= 40
+        && d.address is string && d.address.size() >= 3 && d.address.size() <= 500
+        && (!('name' in d) || (d.name is string && d.name.size() <= 200))
+        && (!('note' in d) || (d.note is string && d.note.size() <= 1000))
+        && d.package_id is string && d.package_id.size() <= 128
+        && d.package_name is string && d.package_name.size() <= 200
+        && d.package_price is number && d.package_price >= 0 && d.package_price <= 1000000
+        && d.quantity is number && d.quantity >= 1 && d.quantity <= 1000
+        && d.delivery_area is string
+        && (d.delivery_area == 'inside_dhaka' || d.delivery_area == 'outside_dhaka')
+        && d.delivery_charge is number && d.delivery_charge >= 0 && d.delivery_charge <= 100000
+        && d.total is number && d.total >= 0 && d.total <= 10000000
+        && d.status == 'pending'
+        && d.created_at is string && d.created_at.size() >= 10 && d.created_at.size() <= 64;
+    }
+
+    // -------- Products --------
+    match /products/{productId} {
+      allow read: if productId == 'main' || isAdmin();
+      allow create, update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // -------- Orders --------
+    match /orders/{orderId} {
+      allow read: if isAdmin();
+      allow create: if request.resource.data.id == orderId
+        && isValidNewOrder(request.resource.data);
+      allow update, delete: if isAdmin();
+    }
+
+    // Default deny — no other collections are exposed.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,0 +1,38 @@
+rules_version = '2';
+
+// Firebase Storage security rules for Magic Tissue.
+//
+// product-images/** — public read (used by landing page <img>);
+// admin-only write (uploads from the product editor).
+//
+// Admin is identified by Firebase Auth email. Keep ADMIN_EMAIL in sync with
+// frontend/src/lib/config.js (ADMIN_EMAIL constant).
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function adminEmail() {
+      return "arnosbolti@gmail.com";
+    }
+
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.email != null
+        && request.auth.token.email.lower() == adminEmail();
+    }
+
+    function isImageUpload() {
+      return request.resource != null
+        && request.resource.size > 0
+        && request.resource.size <= 5 * 1024 * 1024
+        && request.resource.contentType != null
+        && request.resource.contentType.matches('image/.*');
+    }
+
+    match /product-images/{allPaths=**} {
+      allow read: if true;
+      allow create, update: if isAdmin() && isImageUpload();
+      allow delete: if isAdmin();
+    }
+  }
+}

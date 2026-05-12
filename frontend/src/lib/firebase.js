@@ -1,21 +1,48 @@
-import { initializeApp, getApps } from "firebase/app";
+import { initializeApp, getApps, getApp } from "firebase/app";
 import {
   getAnalytics,
   isSupported,
   logEvent as fbLogEvent,
   setUserProperties,
 } from "firebase/analytics";
+import {
+  getAuth,
+  setPersistence,
+  browserLocalPersistence,
+  inMemoryPersistence,
+} from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyBtZ8_XhVx_fl9jQ33sn4hccPkPC0W4Xqc",
-  authDomain: "magic-tissue.firebaseapp.com",
-  projectId: "magic-tissue",
-  storageBucket: "magic-tissue.firebasestorage.app",
-  messagingSenderId: "802636203666",
-  appId: "1:802636203666:web:e24d0c68710c22cc3ac84b",
-  measurementId: "G-C2KWDRKM1K",
-};
+import { firebaseConfig } from "./config";
 
+// Initialize the Firebase app exactly once. The web client config is public
+// by design — production access is gated by Firestore / Storage security
+// rules, not by hiding the apiKey.
+function ensureApp() {
+  return getApps().length ? getApp() : initializeApp(firebaseConfig);
+}
+
+const app = ensureApp();
+
+// Eagerly construct the core SDK singletons so any module that imports them
+// gets the same instance bound to the single app.
+export const auth = getAuth(app);
+export const db = getFirestore(app);
+export const storage = getStorage(app);
+
+// Persist the admin session across reloads in the browser; fall back to
+// in-memory persistence during SSR / tests where window is undefined.
+if (typeof window !== "undefined") {
+  setPersistence(auth, browserLocalPersistence).catch((e) => {
+    // Persistence can fail in private-mode storage. Fall back silently.
+    console.warn("Firebase Auth persistence init failed:", e);
+  });
+} else {
+  setPersistence(auth, inMemoryPersistence).catch(() => {});
+}
+
+// -------- Analytics (optional, only when supported in the current env) ----
 let analyticsInstance = null;
 let initPromise = null;
 
@@ -26,7 +53,6 @@ export function initFirebaseAnalytics() {
     try {
       const supported = await isSupported();
       if (!supported) return null;
-      const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
       analyticsInstance = getAnalytics(app);
       return analyticsInstance;
     } catch (e) {
@@ -57,4 +83,4 @@ export async function setUserProps(props) {
   }
 }
 
-export { firebaseConfig };
+export { app, firebaseConfig };

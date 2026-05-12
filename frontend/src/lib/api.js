@@ -1,40 +1,320 @@
-import axios from "axios";
+// Firebase-backed API layer for Magic Tissue.
+//
+// In production (Firebase Spark / no-billing), the frontend talks directly
+// to Firestore, Firebase Storage, and Firebase Auth — no Cloud Run / FastAPI
+// server is required. The exported function names and return shapes mirror
+// the legacy REST API so the rest of the React app is unchanged.
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || "";
-export const API = `${BACKEND_URL}/api`;
+import {
+  collection,
+  deleteDoc,
+  doc,
+  getDoc,
+  getDocs,
+  orderBy,
+  query,
+  serverTimestamp,
+  setDoc,
+  updateDoc,
+} from "firebase/firestore";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import {
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+} from "firebase/auth";
 
-export const api = axios.create({
-  baseURL: API,
-  headers: { "Content-Type": "application/json" },
-});
+import { auth, db, storage } from "./firebase";
+import {
+  ADMIN_EMAIL,
+  ORDERS_COLLECTION,
+  PRODUCTS_COLLECTION,
+  PRODUCT_DOC_ID,
+  PRODUCT_IMAGES_PREFIX,
+  isAdminEmail,
+} from "./config";
+import { mergeWithDefault } from "./defaultProduct";
 
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("admin_token");
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+// -------- Helpers --------
+function uuid() {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) {
+    return crypto.randomUUID();
   }
-  return config;
-});
+  // RFC4122-ish fallback for very old browsers.
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === "x" ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
 
-export const getProduct = () => api.get("/product").then((r) => r.data);
-export const updateProduct = (payload) =>
-  api.put("/product", payload).then((r) => r.data);
-export const uploadImage = (file) => {
-  const formData = new FormData();
-  formData.append("file", file);
-  return api
-    .post("/upload-image", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    })
-    .then((r) => r.data);
-};
-export const createOrder = (payload) =>
-  api.post("/orders", payload).then((r) => r.data);
-export const listOrders = () => api.get("/orders").then((r) => r.data);
-export const updateOrderStatus = (id, status) =>
-  api.patch(`/orders/${id}`, { status }).then((r) => r.data);
-export const deleteOrder = (id) => api.delete(`/orders/${id}`).then((r) => r.data);
-export const getStats = () => api.get("/stats").then((r) => r.data);
-export const adminLogin = (password) =>
-  api.post("/admin/login", { password }).then((r) => r.data);
-export const adminVerify = () => api.get("/admin/verify").then((r) => r.data);
+function nowIso() {
+  return new Date().toISOString();
+}
+
+function productRef() {
+  return doc(db, PRODUCTS_COLLECTION, PRODUCT_DOC_ID);
+}
+
+function ordersRef() {
+  return collection(db, ORDERS_COLLECTION);
+}
+
+function orderRef(id) {
+  return doc(db, ORDERS_COLLECTION, id);
+}
+
+// Strip undefined values (Firestore rejects undefined) and normalize numeric
+// fields that may have come from <input type="number"> as strings.
+function cleanForFirestore(obj) {
+  const out = {};
+  for (const [k, v] of Object.entries(obj || {})) {
+    if (v === undefined) continue;
+    out[k] = v;
+  }
+  return out;
+}
+
+// -------- Product --------
+export async function getProduct() {
+  const snap = await getDoc(productRef());
+  if (!snap.exists()) {
+    // Surface a sensible default so the landing page renders before an admin
+    // has saved any data. Once the admin saves once, this fallback is no
+    // longer used.
+    return mergeWithDefault({ id: PRODUCT_DOC_ID });
+  }
+  return mergeWithDefault({ id: PRODUCT_DOC_ID, ...snap.data() });
+}
+
+export async function updateProduct(payload) {
+  const data = cleanForFirestore({
+    ...payload,
+    id: PRODUCT_DOC_ID,
+    updated_at: nowIso(),
+    updated_at_ts: serverTimestamp(),
+  });
+  // merge so the admin can save partial updates without losing other fields,
+  // and so the document is created on first save.
+  await setDoc(productRef(), data, { merge: true });
+  return getProduct();
+}
+
+// -------- Storage --------
+export async function uploadImage(file) {
+  if (!file) {
+    const err = new Error("No file selected");
+    err.response = { data: { detail: "No file selected" } };
+    throw err;
+  }
+  if (!file.type || !file.type.startsWith("image/")) {
+    const err = new Error("Only image uploads are allowed");
+    err.response = { data: { detail: "Only image uploads are allowed" } };
+    throw err;
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    const err = new Error("Image must be 5MB or smaller");
+    err.response = { data: { detail: "Image must be 5MB or smaller" } };
+    throw err;
+  }
+
+  const extMatch = (file.name || "").match(/\.[A-Za-z0-9]+$/);
+  const ext = extMatch ? extMatch[0].toLowerCase() : ".jpg";
+  const path = `${PRODUCT_IMAGES_PREFIX}/${uuid()}${ext}`;
+  const objectRef = ref(storage, path);
+
+  await uploadBytes(objectRef, file, {
+    contentType: file.type || "image/jpeg",
+    cacheControl: "public,max-age=31536000,immutable",
+  });
+  const url = await getDownloadURL(objectRef);
+  return { url, path };
+}
+
+// -------- Orders --------
+function buildOrderDoc(payload) {
+  const id = uuid();
+  return {
+    id,
+    name: (payload.name || "").toString(),
+    phone: (payload.phone || "").toString(),
+    address: (payload.address || "").toString(),
+    note: (payload.note || "").toString(),
+    package_id: (payload.package_id || "").toString(),
+    package_name: (payload.package_name || "").toString(),
+    package_price: Number(payload.package_price) || 0,
+    quantity: Number(payload.quantity) || 1,
+    delivery_area: payload.delivery_area === "outside_dhaka"
+      ? "outside_dhaka"
+      : "inside_dhaka",
+    delivery_charge: Number(payload.delivery_charge) || 0,
+    total: Number(payload.total) || 0,
+    status: "pending",
+    created_at: nowIso(),
+  };
+}
+
+export async function createOrder(payload) {
+  // Frontend-side validation mirrors the legacy FastAPI checks. Firestore
+  // security rules apply the same checks server-side.
+  if (!payload || !payload.phone || payload.phone.trim().length < 6) {
+    const err = new Error("Phone number is required");
+    err.response = { data: { detail: "Phone number is required" } };
+    throw err;
+  }
+  if (!payload.address || payload.address.trim().length < 3) {
+    const err = new Error("Address is required");
+    err.response = { data: { detail: "Address is required" } };
+    throw err;
+  }
+
+  const order = buildOrderDoc(payload);
+  await setDoc(orderRef(order.id), order);
+  return order;
+}
+
+export async function listOrders() {
+  const q = query(ordersRef(), orderBy("created_at", "desc"));
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => d.data());
+}
+
+export async function updateOrderStatus(id, status) {
+  const allowed = new Set([
+    "pending",
+    "confirmed",
+    "shipped",
+    "delivered",
+    "cancelled",
+  ]);
+  if (!allowed.has(status)) {
+    const err = new Error("Invalid status");
+    err.response = { data: { detail: "Invalid status" } };
+    throw err;
+  }
+  await updateDoc(orderRef(id), { status });
+  const snap = await getDoc(orderRef(id));
+  return snap.data();
+}
+
+export async function deleteOrder(id) {
+  await deleteDoc(orderRef(id));
+  return { ok: true };
+}
+
+// -------- Stats (computed client-side from orders) --------
+function startsWithDate(iso, dayStr) {
+  return typeof iso === "string" && iso.startsWith(dayStr);
+}
+
+export async function getStats() {
+  const orders = await listOrders();
+
+  const total_orders = orders.length;
+  const total_revenue = orders.reduce(
+    (sum, o) => (o.status !== "cancelled" ? sum + (Number(o.total) || 0) : sum),
+    0
+  );
+  const count = (status) =>
+    orders.reduce((n, o) => (o.status === status ? n + 1 : n), 0);
+  const pending = count("pending");
+  const confirmed = count("confirmed");
+  const shipped = count("shipped");
+  const delivered = count("delivered");
+  const cancelled = count("cancelled");
+
+  // Last 7 days (UTC). Mirror server format: day key is YYYY-MM-DD.
+  const todayUtc = new Date();
+  const daily = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(
+      Date.UTC(
+        todayUtc.getUTCFullYear(),
+        todayUtc.getUTCMonth(),
+        todayUtc.getUTCDate() - i
+      )
+    );
+    const dayStr = d.toISOString().slice(0, 10);
+    let dayOrders = 0;
+    let dayRevenue = 0;
+    for (const o of orders) {
+      if (!startsWithDate(o.created_at, dayStr)) continue;
+      dayOrders += 1;
+      if (o.status !== "cancelled") dayRevenue += Number(o.total) || 0;
+    }
+    daily.push({ date: dayStr, orders: dayOrders, revenue: dayRevenue });
+  }
+
+  return {
+    total_orders,
+    total_revenue,
+    pending,
+    confirmed,
+    shipped,
+    delivered,
+    cancelled,
+    daily,
+  };
+}
+
+// -------- Auth (Firebase Auth) --------
+export async function adminLogin(email, password) {
+  const trimmed = (email || "").trim();
+  if (!trimmed || !password) {
+    const err = new Error("Email and password are required");
+    err.code = "auth/invalid-input";
+    throw err;
+  }
+  if (!isAdminEmail(trimmed)) {
+    const err = new Error("Only the configured admin can sign in");
+    err.code = "auth/not-admin";
+    throw err;
+  }
+  const cred = await signInWithEmailAndPassword(auth, trimmed, password);
+  if (!isAdminEmail(cred.user?.email)) {
+    // Defensive: sign back out if Firebase returned a non-admin account.
+    await signOut(auth).catch(() => {});
+    const err = new Error("Account is not authorized as admin");
+    err.code = "auth/not-admin";
+    throw err;
+  }
+  return { user: cred.user, email: cred.user.email };
+}
+
+export async function adminLogout() {
+  await signOut(auth);
+}
+
+// Returns true when an admin is currently signed in. Resolves after Firebase
+// Auth has finished restoring its persisted state on first call.
+export function adminVerify() {
+  return new Promise((resolve, reject) => {
+    const unsub = onAuthStateChanged(
+      auth,
+      (user) => {
+        unsub();
+        if (user && isAdminEmail(user.email)) {
+          resolve({ ok: true, email: user.email });
+        } else {
+          const err = new Error("Not authenticated");
+          err.code = "auth/not-authenticated";
+          reject(err);
+        }
+      },
+      (err) => {
+        unsub();
+        reject(err);
+      }
+    );
+  });
+}
+
+// Subscribe to admin auth-state changes. Returns the Firebase unsubscribe fn.
+export function onAdminAuthState(callback) {
+  return onAuthStateChanged(auth, (user) => {
+    callback(user && isAdminEmail(user.email) ? user : null);
+  });
+}
+
+// Re-export so callers can read the admin email without importing config.
+export { ADMIN_EMAIL };

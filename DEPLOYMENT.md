@@ -1,86 +1,170 @@
-# Firebase Hosting + Cloud Run deployment
+# Deployment — Firebase Spark / no-billing
 
-This project deploys as:
+This project is deployable entirely on the **Firebase free (Spark) plan**:
 
-- React frontend on Firebase Hosting
-- FastAPI backend on Cloud Run
-- Firestore as the database
-- Firebase Storage for admin product image uploads
-- Firebase Analytics in the frontend
+- React frontend on **Firebase Hosting**
+- **Firestore** for products & orders (called directly from the browser)
+- **Firebase Storage** for product images (uploaded directly from the admin editor)
+- **Firebase Authentication** (email/password) for admin login
+- **Firebase Analytics** for page/event tracking
 
-## Required one-time setup
+> **No Cloud Run / no Cloud Build / no FastAPI backend is required in production.**
+> The FastAPI server under `backend/` is preserved only for local development;
+> it is **not** invoked in production. See [Optional: local FastAPI backend](#optional-local-fastapi-backend) below.
 
-Install CLIs and authenticate:
+---
+
+## 1. One-time CLI setup
 
 ```bash
 npm install -g firebase-tools
 firebase login
-gcloud auth login
-gcloud config set project magic-tissue
+firebase use magic-tissue   # project id is set in .firebaserc
 ```
 
-Enable required services:
+You do **not** need `gcloud` or to enable billing/Cloud Run.
 
-```bash
-gcloud services enable \
-  artifactregistry.googleapis.com \
-  cloudbuild.googleapis.com \
-  run.googleapis.com \
-  firestore.googleapis.com \
-  firebasehosting.googleapis.com
-```
+## 2. One-time Firebase Console setup
 
-Create or confirm both Firestore and Firebase Storage in the Firebase console for project `magic-tissue`.
+In the [Firebase Console](https://console.firebase.google.com/project/magic-tissue) (free / Spark plan):
 
-## Required secrets
+1. **Build → Authentication → Get started → Sign-in method**
+   - Enable **Email/Password** (the basic option, not the passwordless link).
+2. **Build → Authentication → Users → Add user**
+   - Email: `arnosbolti@gmail.com`
+   - Password: pick a strong password (store in your password manager).
+   - This single account is the only one allowed to act as admin.
+     The allowed email is centralized in
+     [`frontend/src/lib/config.js`](frontend/src/lib/config.js) (`ADMIN_EMAIL`) and
+     mirrored in [`firestore.rules`](firestore.rules) and [`storage.rules`](storage.rules).
+     If you ever change it, update **all three** locations together.
+3. **Build → Firestore Database → Create database**
+   - Start in **production mode**. Region: any (asia-south1 / us-central etc.).
+   - Rules will be replaced by `firestore.rules` on the next deploy.
+4. **Build → Storage → Get started**
+   - Choose the default bucket `magic-tissue.firebasestorage.app`.
+   - Rules will be replaced by `storage.rules` on the next deploy.
 
-Generate strong values locally. Do not commit them.
+That's all the manual setup needed.
 
-```bash
-ADMIN_PASSWORD='replace-with-a-strong-admin-password'
-ADMIN_TOKEN="$(openssl rand -hex 32)"
-```
+## 3. Deploy
 
-The previously committed Firebase service account key must be considered exposed. Delete that key in Google Cloud IAM and create a new one only if you need local development credentials. Cloud Run should use Application Default Credentials instead of a JSON key.
-
-## Deploy backend to Cloud Run
-
-```bash
-gcloud run deploy magic-tissue-api \
-  --source backend \
-  --region asia-south1 \
-  --allow-unauthenticated \
-  --set-env-vars ADMIN_PASSWORD="$ADMIN_PASSWORD",ADMIN_TOKEN="$ADMIN_TOKEN",FIREBASE_PROJECT_ID="magic-tissue",FIREBASE_STORAGE_BUCKET="magic-tissue.firebasestorage.app",CORS_ORIGINS="https://magic-tissue.web.app,https://magic-tissue.firebaseapp.com"
-```
-
-The backend container listens on the Cloud Run `PORT` env var and initializes Firebase Admin using Cloud Run's default service account. That service account needs permission to read/write Firestore and Storage objects.
-
-## Deploy frontend to Firebase Hosting
-
-The frontend defaults API calls to `/api`; Firebase Hosting rewrites `/api/**` to the Cloud Run service configured in `firebase.json`.
+Build the frontend and deploy Hosting + Firestore rules + Storage rules in one step:
 
 ```bash
 cd frontend
 yarn install
 yarn build
 cd ..
-firebase deploy --only hosting
+firebase deploy --only hosting,firestore:rules,storage
 ```
 
-## Verify production
+The first deploy will:
+
+- Push the production React bundle to Firebase Hosting (`magic-tissue.web.app`, `magic-tissue.firebaseapp.com`).
+- Activate [`firestore.rules`](firestore.rules) (public read of `products/main`,
+  public create of validated orders, admin-only everything else).
+- Activate [`storage.rules`](storage.rules) (public read of `product-images/**`,
+  admin-only writes capped at 5MB image uploads).
+
+You can deploy each piece individually if you only changed one:
 
 ```bash
-curl https://magic-tissue.web.app/api/product
+firebase deploy --only hosting
+firebase deploy --only firestore:rules
+firebase deploy --only storage
 ```
 
-Then open:
+## 4. Verify
 
-- `https://magic-tissue.web.app/`
-- `https://magic-tissue.web.app/admin/login`
+Visit:
 
-Submit a test order from the landing page, log into admin, confirm the order appears, then delete the test order.
-Upload a product image from `/admin` → Product Editor → Product Images, save the product, and confirm the image renders on the landing page.
+- `https://magic-tissue.web.app/` — landing page should render. If Firestore is empty,
+  it shows seeded default content. Submit a test order from the order form.
+- `https://magic-tissue.web.app/admin/login` — log in with `arnosbolti@gmail.com` and the
+  password you set in step 2.
+- In the admin dashboard:
+  - **Orders** — your test order should appear; change its status, then delete it.
+  - **Product** — open the Product Editor, upload an image under "Product Images"
+    (it goes to Firebase Storage), tweak any text, click **Save All Changes**.
+    Reload the landing page to confirm the new content renders.
 
-## Local backend credentials
+You can also smoke-check from a terminal:
 
-For local development only, put a fresh service account key at `backend/secrets/firebase-admin.json` or set `FIREBASE_CREDENTIALS_PATH`. The `backend/secrets/` directory is ignored and excluded from Docker builds.
+```bash
+# Hosting is up
+curl -sI https://magic-tissue.web.app/ | head -1
+
+# Product doc is readable without auth (Firestore REST)
+curl -s "https://firestore.googleapis.com/v1/projects/magic-tissue/databases/(default)/documents/products/main" | head -20
+```
+
+## 5. Updating the admin email
+
+The admin allowlist is centralized in **three** files:
+
+- `frontend/src/lib/config.js` — `ADMIN_EMAIL`
+- `firestore.rules` — `adminEmail()`
+- `storage.rules` — `adminEmail()`
+
+To change the admin:
+
+1. Create the new admin user in Firebase Auth → Users.
+2. Update all three files with the new email (case-insensitive — rules use `.lower()`).
+3. Re-run `yarn build` in `frontend/` and `firebase deploy --only hosting,firestore:rules,storage`.
+
+## 6. Security model
+
+| Resource | Public | Admin (`arnosbolti@gmail.com`) |
+| --- | --- | --- |
+| `products/main` (Firestore) | read | read, create, update, delete |
+| `orders/*` (Firestore) | create (validated) | read, update, delete |
+| `product-images/**` (Storage) | read | upload (≤5MB images), delete |
+| All other Firestore paths | denied | denied |
+| All other Storage paths | denied | denied |
+
+Order creation is validated server-side (in Firestore rules): required fields, phone ≥6 chars,
+address ≥3 chars, `status == 'pending'`, sensible numeric bounds, and `delivery_area` ∈
+`{inside_dhaka, outside_dhaka}`. The same checks run client-side for nicer UX.
+
+> The Firebase web `apiKey` in `frontend/src/lib/config.js` is **public by design**.
+> It is not a secret; access is gated by the rules above, not by hiding the key.
+> Never commit a Firebase **service account** JSON to the repo (see `.gitignore`).
+
+## Optional: local FastAPI backend
+
+The `backend/` FastAPI service is **only** for local development and is **not deployed**.
+If you need to run it locally against Firestore:
+
+```bash
+cd backend
+pip install -r requirements.txt
+
+# Set local admin secrets (any values — only used by your local box)
+export ADMIN_PASSWORD='choose-something'
+export ADMIN_TOKEN="$(openssl rand -hex 32)"
+export FIREBASE_PROJECT_ID=magic-tissue
+export FIREBASE_STORAGE_BUCKET=magic-tissue.firebasestorage.app
+
+# For Firestore access, place a service account key at backend/secrets/firebase-admin.json
+# (ignored by git). Production does NOT need this — the browser SDK uses the user's auth.
+
+uvicorn server:app --reload --port 8001
+```
+
+The production frontend ignores `REACT_APP_BACKEND_URL` because it no longer makes REST calls;
+all data access goes through the Firebase Web SDK.
+
+---
+
+## Rollback
+
+```bash
+# Roll back hosting to the previous release from the Hosting → Release History UI,
+# or via CLI:
+firebase hosting:clone magic-tissue:live magic-tissue:live --version <previous-version-id>
+
+# Rules can be reverted by checking out the previous firestore.rules / storage.rules
+# and re-running:
+firebase deploy --only firestore:rules,storage
+```

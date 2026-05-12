@@ -199,7 +199,10 @@ export default function ProductEditor({ product, onChange }) {
       toast.success("সব পরিবর্তন সংরক্ষিত হয়েছে");
       onChange();
     } catch (err) {
-      toast.error(err?.response?.data?.detail || "সেভ করতে সমস্যা হয়েছে");
+      console.error("save product failed", err);
+      toast.error(
+        err?.response?.data?.detail || err?.message || "সেভ করতে সমস্যা হয়েছে"
+      );
     } finally {
       setSaving(false);
     }
@@ -215,7 +218,10 @@ export default function ProductEditor({ product, onChange }) {
       setImages((current) => [...current, uploaded.url]);
       toast.success("ছবি আপলোড হয়েছে");
     } catch (err) {
-      toast.error(err?.response?.data?.detail || "ছবি আপলোড করতে সমস্যা হয়েছে");
+      console.error("image upload failed", err);
+      toast.error(
+        err?.response?.data?.detail || err?.message || "ছবি আপলোড করতে সমস্যা হয়েছে"
+      );
     } finally {
       setUploadingImage(false);
     }
