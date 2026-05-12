@@ -25,7 +25,7 @@
   ],
   "updated_files": ["/app/backend/tests/backend_test.py"],
   "success_rate": {"backend": "100% (20/20)", "frontend": "100% of tested admin editor + landing reflect flow"},
-  "test_credentials": "Admin password: admin123 (from /app/memory/test_credentials.md).",
+  "test_credentials": "Admin credentials are supplied through environment variables.",
   "seed_data_creation": "DB ends with 1 extra trust_badge (label 'নতুন badge'), 1 extra review (name 'নাম'), 1 extra FAQ (question 'নতুন প্রশ্ন?') added via admin UI Add buttons during E2E. Banner text was restored to original. No orders created in this iteration. Main agent may want to reseed product if pristine state needed.",
   "retest_needed": false,
   "main_agent_can_self_test": true,

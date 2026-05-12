@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || "";
 export const API = `${BACKEND_URL}/api`;
 
 export const api = axios.create({
@@ -19,6 +19,15 @@ api.interceptors.request.use((config) => {
 export const getProduct = () => api.get("/product").then((r) => r.data);
 export const updateProduct = (payload) =>
   api.put("/product", payload).then((r) => r.data);
+export const uploadImage = (file) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  return api
+    .post("/upload-image", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    })
+    .then((r) => r.data);
+};
 export const createOrder = (payload) =>
   api.post("/orders", payload).then((r) => r.data);
 export const listOrders = () => api.get("/orders").then((r) => r.data);

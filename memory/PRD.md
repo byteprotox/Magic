@@ -28,8 +28,8 @@ User requested a Bengali single-product landing page for "Smart Pocket Knife" in
 - Testing: 18/18 backend tests passing; all e2e frontend flows verified.
 
 ## Test Credentials
-- Admin password: `admin123` (env `ADMIN_PASSWORD`)
-- Admin token: `penknife-admin-secret-token-2026` (env `ADMIN_TOKEN`)
+- Admin credentials are environment-specific and must be supplied through `ADMIN_PASSWORD` and `ADMIN_TOKEN`.
+- Do not commit production credentials or service account keys to this repository.
 
 ## Backlog / Next Tasks
 **P1**:

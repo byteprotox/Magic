@@ -26,7 +26,7 @@
   ],
   "updated_files": ["/app/backend/tests/backend_test.py"],
   "success_rate": {"backend": "100% (18/18)", "frontend": "100% of tested flows (landing + admin end-to-end)"},
-  "test_credentials": "Admin password: admin123 (from /app/memory/test_credentials.md).",
+  "test_credentials": "Admin credentials are supplied through environment variables.",
   "seed_data_creation": "One UI-created order ('TEST Buyer UI', phone 01711000001, total ৳550) was placed via the landing form, status-updated to 'confirmed', then deleted via admin during the test. Backend pytest also creates a 'TEST Buyer' order and deletes it. DB ends clean.",
   "retest_needed": false,
   "main_agent_can_self_test": true,

@@ -10,10 +10,11 @@ import uuid
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import List, Optional
+from urllib.parse import quote
 
 import firebase_admin
-from firebase_admin import credentials, firestore
-from fastapi import APIRouter, Depends, FastAPI, Header, HTTPException
+from firebase_admin import credentials, firestore, storage
+from fastapi import APIRouter, Depends, FastAPI, File, Header, HTTPException, UploadFile
 from dotenv import load_dotenv
 from google.cloud.firestore_v1 import Query
 from pydantic import BaseModel, ConfigDict, Field
@@ -22,25 +23,44 @@ from starlette.middleware.cors import CORSMiddleware
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / ".env")
 
-ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin123")
-ADMIN_TOKEN = os.environ.get("ADMIN_TOKEN", "change-me")
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD")
+ADMIN_TOKEN = os.environ.get("ADMIN_TOKEN")
+
+if not ADMIN_PASSWORD or not ADMIN_TOKEN:
+    raise RuntimeError("ADMIN_PASSWORD and ADMIN_TOKEN environment variables must be set")
 
 # -------- Firebase Admin / Firestore init (singleton) --------
 if not firebase_admin._apps:
-    cred_path = os.environ.get(
-        "FIREBASE_CREDENTIALS_PATH",
-        str(ROOT_DIR / "secrets" / "firebase-admin.json"),
+    cred_path = os.environ.get("FIREBASE_CREDENTIALS_PATH")
+    default_cred_path = ROOT_DIR / "secrets" / "firebase-admin.json"
+    selected_cred_path = Path(cred_path) if cred_path else default_cred_path
+    if not selected_cred_path.is_absolute():
+        selected_cred_path = ROOT_DIR / selected_cred_path
+    app_options = {}
+    project_id = (
+        os.environ.get("FIREBASE_PROJECT_ID")
+        or os.environ.get("GOOGLE_CLOUD_PROJECT")
+        or os.environ.get("GCLOUD_PROJECT")
     )
-    # Allow absolute or relative path (relative resolves from /app/backend)
-    if not os.path.isabs(cred_path):
-        cred_path = str(ROOT_DIR / cred_path)
-    cred = credentials.Certificate(cred_path)
-    firebase_admin.initialize_app(cred)
+    if project_id:
+        app_options["projectId"] = project_id
+    storage_bucket = os.environ.get("FIREBASE_STORAGE_BUCKET") or (
+        f"{project_id}.firebasestorage.app" if project_id else None
+    )
+    if storage_bucket:
+        app_options["storageBucket"] = storage_bucket
+
+    if selected_cred_path.exists():
+        cred = credentials.Certificate(str(selected_cred_path))
+        firebase_admin.initialize_app(cred, app_options or None)
+    else:
+        firebase_admin.initialize_app(options=app_options or None)
 
 # Sync Firestore client — we wrap each call in asyncio.to_thread() for FastAPI async routes
 fs = firestore.client()
 PRODUCTS = fs.collection("products")
 ORDERS = fs.collection("orders")
+BUCKET = storage.bucket()
 
 app = FastAPI()
 api_router = APIRouter(prefix="/api")
@@ -364,6 +384,18 @@ def _stats_sync() -> dict:
     }
 
 
+def _upload_image_sync(file: UploadFile, content: bytes) -> dict:
+    token = str(uuid.uuid4())
+    extension = Path(file.filename or "image").suffix.lower() or ".jpg"
+    object_name = f"product-images/{uuid.uuid4()}{extension}"
+    blob = BUCKET.blob(object_name)
+    blob.metadata = {"firebaseStorageDownloadTokens": token}
+    blob.upload_from_string(content, content_type=file.content_type)
+    encoded_name = quote(object_name, safe="")
+    url = f"https://firebasestorage.googleapis.com/v0/b/{BUCKET.name}/o/{encoded_name}?alt=media&token={token}"
+    return {"url": url, "path": object_name}
+
+
 # Async wrappers
 async def get_product_doc() -> dict:
     doc = await asyncio.to_thread(_get_product_sync)
@@ -400,6 +432,18 @@ async def update_product(update: ProductUpdate, _: bool = Depends(require_admin)
     payload["updated_at"] = datetime.now(timezone.utc).isoformat()
     doc = await asyncio.to_thread(_update_product_sync, payload)
     return Product(**doc)
+
+
+@api_router.post("/upload-image")
+async def upload_image(file: UploadFile = File(...), _: bool = Depends(require_admin)):
+    if not file.content_type or not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="Only image uploads are allowed")
+    content = await file.read()
+    if not content:
+        raise HTTPException(status_code=400, detail="Image file is empty")
+    if len(content) > 5 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="Image must be 5MB or smaller")
+    return await asyncio.to_thread(_upload_image_sync, file, content)
 
 
 @api_router.post("/orders", response_model=Order)

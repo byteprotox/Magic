@@ -28,7 +28,7 @@
     "/app/backend/tests/backend_test.py (created)"
   ],
   "success_rate": {"backend": "100% (18/18)", "frontend": "100% of tested flows"},
-  "test_credentials": "Admin password: admin123 (from /app/memory/test_credentials.md). Token issued: penknife-admin-secret-token-2026.",
+  "test_credentials": "Admin credentials are supplied through environment variables.",
   "seed_data_creation": "Test orders are created during test runs (TEST Buyer / TEST Buyer UI) — backend test deletes its own order; the UI test leaves one order in DB. Admin orders list confirmed visible.",
   "retest_needed": false,
   "main_agent_can_self_test": true,
