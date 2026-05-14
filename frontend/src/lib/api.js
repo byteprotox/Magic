@@ -26,6 +26,7 @@ import {
 import { auth, db } from "./firebase";
 import {
   ADMIN_EMAIL,
+  hasFirebaseConfig,
   ORDERS_COLLECTION,
   PRODUCTS_COLLECTION,
   PRODUCT_DOC_ID,
@@ -75,6 +76,9 @@ function cleanForFirestore(obj) {
 
 // -------- Product --------
 export async function getProduct() {
+  if (!hasFirebaseConfig) {
+    return mergeWithDefault({ id: PRODUCT_DOC_ID });
+  }
   const snap = await getDoc(productRef());
   if (!snap.exists()) {
     // Surface a sensible default so the landing page renders before an admin
@@ -86,6 +90,9 @@ export async function getProduct() {
 }
 
 export async function updateProduct(payload) {
+  if (!hasFirebaseConfig) {
+    throw new Error("Firebase is not configured. Add frontend/.env before saving product data.");
+  }
   const data = cleanForFirestore({
     ...payload,
     id: PRODUCT_DOC_ID,
@@ -122,6 +129,9 @@ function buildOrderDoc(payload) {
 }
 
 export async function createOrder(payload) {
+  if (!hasFirebaseConfig) {
+    throw new Error("Firebase is not configured. Add frontend/.env before accepting orders.");
+  }
   // Frontend-side validation mirrors the legacy FastAPI checks. Firestore
   // security rules apply the same checks server-side.
   if (!payload || !payload.phone || payload.phone.trim().length < 6) {
@@ -141,12 +151,16 @@ export async function createOrder(payload) {
 }
 
 export async function listOrders() {
+  if (!hasFirebaseConfig) return [];
   const q = query(ordersRef(), orderBy("created_at", "desc"));
   const snap = await getDocs(q);
   return snap.docs.map((d) => d.data());
 }
 
 export async function updateOrderStatus(id, status) {
+  if (!hasFirebaseConfig) {
+    throw new Error("Firebase is not configured.");
+  }
   const allowed = new Set([
     "pending",
     "confirmed",
@@ -165,6 +179,9 @@ export async function updateOrderStatus(id, status) {
 }
 
 export async function deleteOrder(id) {
+  if (!hasFirebaseConfig) {
+    throw new Error("Firebase is not configured.");
+  }
   await deleteDoc(orderRef(id));
   return { ok: true };
 }
@@ -226,6 +243,11 @@ export async function getStats() {
 
 // -------- Auth (Firebase Auth) --------
 export async function adminLogin(email, password) {
+  if (!hasFirebaseConfig) {
+    const err = new Error("Firebase is not configured. Add frontend/.env first.");
+    err.code = "auth/not-configured";
+    throw err;
+  }
   const trimmed = (email || "").trim();
   if (!trimmed || !password) {
     const err = new Error("Email and password are required");
@@ -255,6 +277,11 @@ export async function adminLogout() {
 // Returns true when an admin is currently signed in. Resolves after Firebase
 // Auth has finished restoring its persisted state on first call.
 export function adminVerify() {
+  if (!hasFirebaseConfig) {
+    const err = new Error("Firebase is not configured");
+    err.code = "auth/not-configured";
+    return Promise.reject(err);
+  }
   return new Promise((resolve, reject) => {
     const unsub = onAuthStateChanged(
       auth,

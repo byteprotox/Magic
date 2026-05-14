@@ -88,6 +88,8 @@ frontend/node_modules/.cache/default-development/5.pack
 .env
 .env.*
 *.env
+!.env.example
+!frontend/.env.example
 credentials.json
 *.pem
 *.key
@@ -128,3 +130,6 @@ firestore-debug.log
 storage-debug.log
 firebase-debug.log
 ui-debug.log
+
+!.env.example
+!frontend/.env.example

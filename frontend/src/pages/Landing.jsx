@@ -72,7 +72,7 @@ export default function Landing() {
   const [openFaq, setOpenFaq] = useState(0);
 
   // Initialize Facebook Pixel once product loads
-  useFacebookPixel(product?.fb_pixel_id);
+  useFacebookPixel(product?.fb_pixel_id || process.env.REACT_APP_META_PIXEL_ID);
 
   // Initialize Firebase Analytics (Google Analytics 4) and log page_view
   useEffect(() => {

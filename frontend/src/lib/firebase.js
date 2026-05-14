@@ -13,13 +13,24 @@ import {
 } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
-import { firebaseConfig } from "./config";
+import { firebaseConfig, hasFirebaseConfig } from "./config";
 
 // Initialize the Firebase app exactly once. The web client config is public
 // by design — production access is gated by Firestore security
 // rules, not by hiding the apiKey.
 function ensureApp() {
-  return getApps().length ? getApp() : initializeApp(firebaseConfig);
+  return getApps().length
+    ? getApp()
+    : initializeApp(
+        hasFirebaseConfig
+          ? firebaseConfig
+          : {
+              apiKey: "demo-api-key",
+              authDomain: "demo-magic-tissue.firebaseapp.com",
+              projectId: "demo-magic-tissue",
+              appId: "demo-app-id",
+            }
+      );
 }
 
 const app = ensureApp();
@@ -47,7 +58,7 @@ let initPromise = null;
 export function initFirebaseAnalytics() {
   if (initPromise) return initPromise;
   initPromise = (async () => {
-    if (typeof window === "undefined") return null;
+    if (typeof window === "undefined" || !hasFirebaseConfig) return null;
     try {
       const supported = await isSupported();
       if (!supported) return null;

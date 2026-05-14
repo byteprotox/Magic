@@ -6,20 +6,16 @@ rules_version = '2';
 //   products/main  — public read; admin write. Other product docs are admin-only.
 //   orders/{id}    — public create with validation; admin read/update/delete.
 //
-// Admin is identified by Firebase Auth email. Keep ADMIN_EMAIL in sync with
-// frontend/src/lib/config.js (ADMIN_EMAIL constant).
+// Admins are Firebase Auth users whose lowercase email has a matching document
+// in /admins/{email}. Create that allowlist document manually in Console.
 
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    function adminEmail() {
-      return "arnosbolti@gmail.com";
-    }
-
     function isAdmin() {
       return request.auth != null
         && request.auth.token.email != null
-        && request.auth.token.email.lower() == adminEmail();
+        && exists(/databases/$(database)/documents/admins/$(request.auth.token.email.lower()));
     }
 
     function isValidNewOrder(d) {
@@ -50,6 +46,16 @@ service cloud.firestore {
       allow read: if productId == 'main' || isAdmin();
       allow create, update: if isAdmin();
       allow delete: if isAdmin();
+    }
+
+    // -------- Admin allowlist --------
+    // Create docs manually in the Firebase Console, e.g. admins/you@example.com.
+    // Keeping admin emails in Firestore avoids committing private config to git.
+    match /admins/{email} {
+      allow read: if request.auth != null
+        && request.auth.token.email != null
+        && (request.auth.token.email.lower() == email || isAdmin());
+      allow create, update, delete: if false;
     }
 
     // -------- Orders --------
