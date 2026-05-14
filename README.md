@@ -68,6 +68,8 @@ cp .env.example .env
 nano .env
 ```
 
+Your terminal prompt should now end with `/Magic/frontend`. If it still shows only `/Magic`, run `cd frontend` before continuing.
+
 Paste/fill your values:
 
 ```bash
@@ -83,6 +85,7 @@ REACT_APP_META_PIXEL_ID=YOUR_META_PIXEL_ID
 
 Notes:
 
+- Use `REACT_APP_...` exactly. Do **not** use `VITE_FIREBASE_...`; this is not a Vite app.
 - `REACT_APP_FIREBASE_MEASUREMENT_ID` is optional if you did not enable Google Analytics.
 - `REACT_APP_META_PIXEL_ID` is optional here because you can also add it later in the admin panel.
 - Save in nano with `Ctrl+O`, press `Enter`, then exit with `Ctrl+X`.
@@ -104,7 +107,18 @@ This document is required because Firestore rules only allow admin reads/writes 
 Back in Cloud Shell:
 
 ```bash
+pwd
+# must print something ending in /Magic/frontend
 npm install
+npm run build
+cd ..
+test -d frontend/build && echo "Build folder exists"
+```
+
+If `npm run build` says `Missing script: "build"`, you are in the wrong folder. Run:
+
+```bash
+cd ~/Magic/frontend
 npm run build
 cd ..
 ```
@@ -140,6 +154,9 @@ npm install -g firebase-tools
 
 ### Common Cloud Shell fixes
 
+- **`npm error Missing script: "build"`**: you ran `npm run build` from `~/Magic`. Run `cd ~/Magic/frontend`, then `npm run build`, then `cd ..` before `firebase deploy`.
+- **`Directory 'frontend/build' for Hosting does not exist`**: the frontend was not built. Run `cd ~/Magic/frontend && npm install && npm run build && cd ..`, then deploy again.
+- **Site still uses old Firebase values**: your env file must be `frontend/.env` and variable names must start with `REACT_APP_`, not `VITE_`.
 - **Permission denied in admin panel**: check the Firestore doc path is exactly `admins/your-admin-email@example.com`, lowercase.
 - **Firebase project not found**: run `firebase projects:list`, then `firebase use PROJECT_ID`.
 - **Blank site after deploy**: confirm every required `REACT_APP_FIREBASE_*` value exists in `frontend/.env`, then rebuild with `npm run build` and deploy again.
