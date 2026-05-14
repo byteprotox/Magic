@@ -137,6 +137,8 @@ firebase use YOUR_FIREBASE_PROJECT_ID
 firebase deploy
 ```
 
+`firebase deploy` also runs the frontend install/build automatically through `firebase.json`, so the Hosting folder is created even if you forget to build first.
+
 The deploy publishes:
 
 - Firebase Hosting from `frontend/build`
@@ -165,6 +167,7 @@ npm install -g firebase-tools
 - **`sh: 1: craco: command not found`**: `npm install` did not finish, so the build tool was never installed. Run `cd ~/Magic/frontend && npm install --legacy-peer-deps && npm run build`.
 - **`MODULE_NOT_FOUND` from `ajv-keywords` / `schema-utils`**: delete the broken install and use the committed lockfile: `cd ~/Magic/frontend && rm -rf node_modules && npm ci --legacy-peer-deps && npm run build`.
 - **`Directory 'frontend/build' for Hosting does not exist`**: the frontend was not built. Run `cd ~/Magic/frontend && npm install && npm run build && cd ..`, then deploy again.
+- **Deploy still says `frontend/build` does not exist**: pull the latest branch (`git pull origin capy/secrets-env-cleanup`) so `firebase.json` includes the automatic predeploy build hook, then run `firebase deploy --project YOUR_PROJECT_ID` from `~/Magic`.
 - **Site still uses old Firebase values**: your env file must be `frontend/.env`; after changing it, run `npm run build` again before `firebase deploy`.
 - **Permission denied in admin panel**: check the Firestore doc path is exactly `admins/your-admin-email@example.com`, lowercase.
 - **Firebase project not found**: run `firebase projects:list`, then `firebase use PROJECT_ID`.
