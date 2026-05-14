@@ -57,8 +57,11 @@
     "zod": "^3.24.4"
   },
   "scripts": {
+    "prestart": "node scripts/normalize-env.js",
     "start": "craco start",
+    "prebuild": "node scripts/normalize-env.js",
     "build": "craco build",
+    "pretest": "node scripts/normalize-env.js",
     "test": "craco test"
   },
   "browserslist": {

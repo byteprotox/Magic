@@ -28,14 +28,15 @@ cp .env.example .env
 Fill these values from Firebase Project Settings → Your apps → Web app config:
 
 ```bash
-REACT_APP_FIREBASE_API_KEY=...
-REACT_APP_FIREBASE_AUTH_DOMAIN=your-project-id.firebaseapp.com
-REACT_APP_FIREBASE_PROJECT_ID=your-project-id
-REACT_APP_FIREBASE_MESSAGING_SENDER_ID=...
-REACT_APP_FIREBASE_APP_ID=...
-REACT_APP_FIREBASE_MEASUREMENT_ID=... # optional
-REACT_APP_ADMIN_EMAIL=you@example.com
-REACT_APP_META_PIXEL_ID=... # optional; can also be set in admin panel
+VITE_FIREBASE_API_KEY=...
+VITE_FIREBASE_AUTH_DOMAIN=your-project-id.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=your-project-id
+VITE_FIREBASE_STORAGE_BUCKET=your-project-id.firebasestorage.app
+VITE_FIREBASE_MESSAGING_SENDER_ID=...
+VITE_FIREBASE_APP_ID=...
+VITE_FIREBASE_MEASUREMENT_ID=... # optional
+VITE_ADMIN_EMAIL=you@example.com
+VITE_META_PIXEL_ID=... # optional; can also be set in admin panel
 ```
 
 `frontend/.env` is gitignored. Keep it local or in your hosting/build environment only.
@@ -102,7 +103,7 @@ firebase deploy --only firestore:indexes
 
 From Meta Events Manager, create/select a Pixel and copy the Pixel ID. You can add it either way:
 
-- Put it in `REACT_APP_META_PIXEL_ID` before build, or
+- Put it in `VITE_META_PIXEL_ID` before build, or
 - Log into `/admin`, open **Product**, paste it into **Facebook Pixel ID**, and save.
 
 The app loads the standard Meta Pixel base script, tracks `PageView`, tracks `InitiateCheckout` when a visitor clicks an order CTA, and tracks `Purchase` when an order is submitted.
