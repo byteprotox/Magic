@@ -119,6 +119,8 @@ cd ..
 test -d frontend/build && echo "Build folder exists"
 ```
 
+This repo includes `frontend/.npmrc` with `legacy-peer-deps=true`, so Cloud Shell `npm install` will use the dependency resolver needed by this React template.
+
 If `npm run build` says `Missing script: "build"`, you are in the wrong folder. Run:
 
 ```bash
@@ -159,6 +161,8 @@ npm install -g firebase-tools
 ### Common Cloud Shell fixes
 
 - **`npm error Missing script: "build"`**: you ran `npm run build` from `~/Magic`. Run `cd ~/Magic/frontend`, then `npm run build`, then `cd ..` before `firebase deploy`.
+- **`npm error ERESOLVE unable to resolve dependency tree`**: pull the latest branch so `frontend/.npmrc` exists, then run `npm install` again. Or run `npm install --legacy-peer-deps` once.
+- **`sh: 1: craco: command not found`**: `npm install` did not finish, so the build tool was never installed. Run `cd ~/Magic/frontend && npm install --legacy-peer-deps && npm run build`.
 - **`Directory 'frontend/build' for Hosting does not exist`**: the frontend was not built. Run `cd ~/Magic/frontend && npm install && npm run build && cd ..`, then deploy again.
 - **Site still uses old Firebase values**: your env file must be `frontend/.env`; after changing it, run `npm run build` again before `firebase deploy`.
 - **Permission denied in admin panel**: check the Firestore doc path is exactly `admins/your-admin-email@example.com`, lowercase.
