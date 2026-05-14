@@ -7,6 +7,9 @@ import { adminLogin, adminVerify, ADMIN_EMAIL } from "../lib/api";
 function friendlyError(err) {
   const code = err?.code || "";
   if (code === "auth/not-admin") return "এই অ্যাকাউন্ট অ্যাডমিন হিসেবে অনুমোদিত নয়";
+  if (code === "auth/not-admin-allowlisted") return "Firestore এ admins/{email} ডকুমেন্ট নেই";
+  if (code === "auth/operation-not-allowed") return "Firebase Auth এ Email/Password sign-in চালু করুন";
+  if (code === "permission-denied") return "Firestore rules/admin allowlist ঠিক নেই";
   if (code === "auth/invalid-credential" || code === "auth/invalid-login-credentials")
     return "ভুল ইমেইল বা পাসওয়ার্ড";
   if (code === "auth/wrong-password") return "ভুল পাসওয়ার্ড";

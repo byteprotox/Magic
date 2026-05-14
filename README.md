@@ -106,6 +106,8 @@ In Firebase Console → Firestore Database:
 
 This document is required because Firestore rules only allow admin reads/writes when `/admins/{your-email}` exists.
 
+Also confirm Firebase Console → Authentication → Sign-in method → **Email/Password** is enabled, and Authentication → Users contains that exact admin email with the password you are typing.
+
 ### 6. Build the frontend
 
 Back in Cloud Shell:

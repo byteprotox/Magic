@@ -63,6 +63,10 @@ function orderRef(id) {
   return doc(db, ORDERS_COLLECTION, id);
 }
 
+function adminRef(email) {
+  return doc(db, "admins", String(email || "").trim().toLowerCase());
+}
+
 // Strip undefined values (Firestore rejects undefined) and normalize numeric
 // fields that may have come from <input type="number"> as strings.
 function cleanForFirestore(obj) {
@@ -265,6 +269,13 @@ export async function adminLogin(email, password) {
     await signOut(auth).catch(() => {});
     const err = new Error("Account is not authorized as admin");
     err.code = "auth/not-admin";
+    throw err;
+  }
+  const allowlistSnap = await getDoc(adminRef(cred.user.email));
+  if (!allowlistSnap.exists()) {
+    await signOut(auth).catch(() => {});
+    const err = new Error(`Admin allowlist document is missing: admins/${cred.user.email.toLowerCase()}`);
+    err.code = "auth/not-admin-allowlisted";
     throw err;
   }
   return { user: cred.user, email: cred.user.email };

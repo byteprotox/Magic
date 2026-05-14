@@ -178,6 +178,47 @@ body {
     background: var(--bg-soft);
 }
 
+.btn-primary {
+    background: #ff5722;
+    color: white;
+    font-weight: 800;
+    padding: 0.85rem 1.25rem;
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    border: 2px solid #ff5722;
+    width: 100%;
+    text-align: center;
+    text-decoration: none;
+}
+.btn-primary:hover:not(:disabled) {
+    background: #f4511e;
+    border-color: #f4511e;
+    transform: translateY(-1px);
+}
+.btn-primary:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
+}
+.btn-ghost {
+    color: #a1a1aa;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.65rem 0.85rem;
+    border-radius: 0.5rem;
+    transition: all 0.15s ease;
+}
+.btn-ghost:hover {
+    background: #18181b;
+    color: white;
+}
+
 /* ---------- Inputs ---------- */
 .input {
     width: 100%;
@@ -248,6 +289,14 @@ body {
 .card-white:hover {
     border-color: var(--border-strong);
     transform: translateY(-2px);
+}
+
+.card,
+.card-admin {
+    background: #111113;
+    border: 1px solid #27272a;
+    border-radius: 0.75rem;
+    box-shadow: 0 18px 60px rgba(0, 0, 0, 0.22);
 }
 
 .callout-warning {
